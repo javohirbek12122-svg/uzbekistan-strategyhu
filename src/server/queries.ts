@@ -1,5 +1,7 @@
 import 'server-only';
+import { unstable_cache } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { publicClient } from '@/lib/supabase/public';
 import { isSupabaseConfigured } from '@/lib/env';
 import type { Address, Banner, Category, DeliveryZone, Order, Product, Ticket } from '@/lib/types';
 
@@ -26,32 +28,42 @@ export interface CatalogFilters {
 
 export const CATALOG_PAGE_SIZE = 24;
 
-export async function getCategories(): Promise<Category[]> {
+/** Revalidation tag for every cached public catalog read. */
+export const CATALOG_TAG = 'catalog';
+const CATALOG_TTL_SECONDS = 60;
+
+/**
+ * Public catalog reads are identical for all visitors, so they are served from
+ * the data cache instead of hitting Postgres once per request. The console
+ * revalidates `CATALOG_TAG` whenever it changes catalog data.
+ */
+function cachedRead<A extends unknown[], R>(key: string, fn: (...args: A) => Promise<R>) {
+  return unstable_cache(fn, ['catalog', key], { revalidate: CATALOG_TTL_SECONDS, tags: [CATALOG_TAG] });
+}
+
+export const getCategories = cachedRead('categories', async (): Promise<Category[]> => {
   if (!isSupabaseConfigured) return [];
-  const supabase = await createClient();
   const data = pick(
     'categories',
-    await supabase.from('categories').select('*').eq('is_active', true).order('position', { ascending: true }),
+    await publicClient().from('categories').select('*').eq('is_active', true).order('position', { ascending: true }),
   );
   return (data ?? []) as Category[];
-}
+});
 
-export async function getBanners(): Promise<Banner[]> {
+export const getBanners = cachedRead('banners', async (): Promise<Banner[]> => {
   if (!isSupabaseConfigured) return [];
-  const supabase = await createClient();
   const data = pick(
     'banners',
-    await supabase.from('banners').select('*').eq('is_active', true).order('position', { ascending: true }),
+    await publicClient().from('banners').select('*').eq('is_active', true).order('position', { ascending: true }),
   );
   return (data ?? []) as Banner[];
-}
+});
 
-export async function getFeaturedProducts(limit = 12): Promise<Product[]> {
+export const getFeaturedProducts = cachedRead('featured', async (limit: number = 12): Promise<Product[]> => {
   if (!isSupabaseConfigured) return [];
-  const supabase = await createClient();
   const data = pick(
     'featured-products',
-    await supabase
+    await publicClient()
       .from('products')
       .select(PRODUCT_SELECT)
       .eq('is_active', true)
@@ -60,14 +72,13 @@ export async function getFeaturedProducts(limit = 12): Promise<Product[]> {
       .limit(limit),
   );
   return (data ?? []) as unknown as Product[];
-}
+});
 
-export async function getNewProducts(limit = 12): Promise<Product[]> {
+export const getNewProducts = cachedRead('new', async (limit: number = 12): Promise<Product[]> => {
   if (!isSupabaseConfigured) return [];
-  const supabase = await createClient();
   const data = pick(
     'new-products',
-    await supabase
+    await publicClient()
       .from('products')
       .select(PRODUCT_SELECT)
       .eq('is_active', true)
@@ -75,11 +86,11 @@ export async function getNewProducts(limit = 12): Promise<Product[]> {
       .limit(limit),
   );
   return (data ?? []) as unknown as Product[];
-}
+});
 
-export async function getCatalog(filters: CatalogFilters): Promise<{ products: Product[]; total: number }> {
+export const getCatalog = cachedRead('list', async (filters: CatalogFilters): Promise<{ products: Product[]; total: number }> => {
   if (!isSupabaseConfigured) return { products: [], total: 0 };
-  const supabase = await createClient();
+  const supabase = publicClient();
   const page = Math.max(1, filters.page ?? 1);
   const from = (page - 1) * CATALOG_PAGE_SIZE;
 
@@ -123,24 +134,22 @@ export async function getCatalog(filters: CatalogFilters): Promise<{ products: P
   const result = await query;
   const data = pick('catalog', result);
   return { products: (data ?? []) as unknown as Product[], total: result.count ?? 0 };
-}
+});
 
-export async function getProductBySlug(slug: string): Promise<Product | null> {
+export const getProductBySlug = cachedRead('product', async (slug: string): Promise<Product | null> => {
   if (!isSupabaseConfigured) return null;
-  const supabase = await createClient();
   const data = pick(
     'product',
-    await supabase.from('products').select(PRODUCT_SELECT).eq('slug', slug).maybeSingle(),
+    await publicClient().from('products').select(PRODUCT_SELECT).eq('slug', slug).maybeSingle(),
   );
   return (data as unknown as Product) ?? null;
-}
+});
 
-export async function getProductReviews(productId: string) {
+export const getProductReviews = cachedRead('reviews', async (productId: string) => {
   if (!isSupabaseConfigured) return [];
-  const supabase = await createClient();
   const data = pick(
     'product-reviews',
-    await supabase
+    await publicClient()
       .from('reviews')
       .select('id, rating, body, created_at, user_id')
       .eq('product_id', productId)
@@ -149,17 +158,20 @@ export async function getProductReviews(productId: string) {
       .limit(20),
   );
   return data ?? [];
-}
+});
 
-export async function getZones(): Promise<DeliveryZone[]> {
+export const getZones = cachedRead('zones', async (): Promise<DeliveryZone[]> => {
   if (!isSupabaseConfigured) return [];
-  const supabase = await createClient();
   const data = pick(
     'delivery-zones',
-    await supabase.from('delivery_zones').select('*').eq('is_active', true).order('position', { ascending: true }),
+    await publicClient()
+      .from('delivery_zones')
+      .select('*')
+      .eq('is_active', true)
+      .order('position', { ascending: true }),
   );
   return (data ?? []) as DeliveryZone[];
-}
+});
 
 export async function getCart() {
   if (!isSupabaseConfigured) return { items: [], itemsTotal: 0, weightGram: 0, count: 0 };
@@ -254,18 +266,21 @@ export async function getMyNotifications() {
   return data ?? [];
 }
 
-export async function getStoreSettings(): Promise<{ name: string; phone: string; telegram: string; address: string }> {
-  const fallback = {
-    name: 'Parkent E-Mart',
-    phone: '+998 90 000 00 00',
-    telegram: 'https://t.me/parkent_emart',
-    address: 'Parkent tumani, Toshkent viloyati',
-  };
-  if (!isSupabaseConfigured) return fallback;
-  const supabase = await createClient();
-  const data = pick(
-    'store-settings',
-    await supabase.from('settings').select('value').eq('key', 'store').maybeSingle(),
-  );
-  return { ...fallback, ...((data?.value as Record<string, string>) ?? {}) };
-}
+/** Rendered in the shared layout, so it must never cost a query per request. */
+export const getStoreSettings = cachedRead(
+  'store-settings',
+  async (): Promise<{ name: string; phone: string; telegram: string; address: string }> => {
+    const fallback = {
+      name: 'Parkent E-Mart',
+      phone: '+998 90 000 00 00',
+      telegram: 'https://t.me/parkent_emart',
+      address: 'Parkent tumani, Toshkent viloyati',
+    };
+    if (!isSupabaseConfigured) return fallback;
+    const data = pick(
+      'store-settings',
+      await publicClient().from('settings').select('value').eq('key', 'store').maybeSingle(),
+    );
+    return { ...fallback, ...((data?.value as Record<string, string>) ?? {}) };
+  },
+);

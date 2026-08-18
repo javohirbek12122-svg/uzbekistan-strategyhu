@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import { RemoteImage as Image } from '@/components/ui/remote-image';
 import { consoleContent } from '@/server/console/queries';
 import { BannerForm, NewsForm } from '@/components/console/content-forms';
 import { dateTime } from '@/lib/format';

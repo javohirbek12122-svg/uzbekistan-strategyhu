@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import { RemoteImage as Image } from '@/components/ui/remote-image';
 import Link from 'next/link';
 import { Star } from 'lucide-react';
 import { discountPercent, money } from '@/lib/format';

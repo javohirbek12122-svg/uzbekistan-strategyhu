@@ -121,14 +121,20 @@ export async function saveAddress(_prev: FormState, formData: FormData): Promise
     is_default: parsed.data.is_default ?? false,
   };
 
-  const { error } = parsed.data.id
-    ? await supabase.from('addresses').update(payload).eq('id', parsed.data.id)
-    : await supabase.from('addresses').insert(payload);
+  const { data: saved, error } = parsed.data.id
+    ? await supabase.from('addresses').update(payload).eq('id', parsed.data.id).select('id').single()
+    : await supabase.from('addresses').insert(payload).select('id').single();
 
   if (error) return { ok: false, message: error.message };
 
   if (payload.is_default) {
-    await supabase.from('addresses').update({ is_default: false }).neq('id', parsed.data.id ?? '');
+    // Scoped to the owner and to the row that was just saved, otherwise a new
+    // default leaves the previous one flagged as well.
+    await supabase
+      .from('addresses')
+      .update({ is_default: false })
+      .eq('user_id', user.id)
+      .neq('id', saved.id);
   }
 
   revalidatePath('/checkout');
@@ -307,4 +313,15 @@ export async function submitReview(_prev: FormState, formData: FormData): Promis
   if (error) return { ok: false, message: error.message };
 
   return { ok: true, message: 'Sharh moderatsiyaga yuborildi' };
+}
+
+/** Clears the unread badge for the signed-in customer. */
+export async function markNotificationsRead(): Promise<void> {
+  const user = await requireUser();
+  await serviceClient()
+    .from('notifications')
+    .update({ read_at: new Date().toISOString() })
+    .eq('user_id', user.id)
+    .is('read_at', null);
+  revalidatePath('/notifications');
 }

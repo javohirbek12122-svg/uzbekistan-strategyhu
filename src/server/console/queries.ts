@@ -94,7 +94,9 @@ export async function consoleUsers(search = '', page = 1) {
     .select('id, email, full_name, phone, is_blocked, created_at, user_roles(role)', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, from + PAGE - 1);
-  if (search) query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%,phone.ilike.%${search}%`);
+  // Commas, parentheses and `%` would change the parsed PostgREST filter.
+  const term = search.replace(/[%,()]/g, ' ').trim();
+  if (term) query = query.or(`email.ilike.%${term}%,full_name.ilike.%${term}%,phone.ilike.%${term}%`);
   const { data, count } = await query;
   return { users: (data ?? []) as unknown as ProfileRow[], total: count ?? 0, page };
 }

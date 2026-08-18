@@ -33,6 +33,7 @@ npm run dev                  # http://localhost:3000
 | `PAYME_MERCHANT_ID`, `PAYME_MERCHANT_KEY`, `PAYME_CHECKOUT_URL` | **faqat server** | Payme Merchant API |
 | `CLICK_SERVICE_ID`, `CLICK_MERCHANT_ID`, `CLICK_SECRET_KEY` | **faqat server** | Click SHOP-API |
 | `CRON_SECRET` | **faqat server** | SLA cron endpointi uchun bearer token |
+| `TRUSTED_PROXY_HOPS` | **faqat server** | Oldindagi ishonchli proxy soni (Vercel: `1`). IP cheklovi va audit uchun `x-forwarded-for` shu qiymatga qarab o'qiladi |
 
 Server kalitlarini `.env.local` va hosting provayderining "Environment variables"
 bo'limidan boshqa joyga yozmang. `.env.example` dan tashqari barcha `.env*` fayllari git'ga tushmaydi.

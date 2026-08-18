@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import { RemoteImage as Image } from '@/components/ui/remote-image';
 import { notFound } from 'next/navigation';
 import { consoleCategories, consoleProduct } from '@/server/console/queries';
 import { ProductForm } from '@/components/console/product-form';

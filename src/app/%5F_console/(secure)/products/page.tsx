@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import { RemoteImage as Image } from '@/components/ui/remote-image';
 import { Plus } from 'lucide-react';
 import { consoleProducts } from '@/server/console/queries';
 import { deleteProduct, toggleProduct } from '@/server/actions/console';

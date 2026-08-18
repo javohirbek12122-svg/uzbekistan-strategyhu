@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { handlePaymeRequest, PAYME_ERROR, verifyPaymeAuth, type PaymeRequest } from '@/lib/payments/payme';
 import { logPaymentEvent, paymeStore } from '@/server/payments/stores';
+import { isCallbackThrottled, recordCallbackFailure } from '@/server/payments/throttle';
 import { serverEnv } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +25,11 @@ export async function POST(request: Request) {
     });
   }
 
-  if (!verifyPaymeAuth(request.headers.get('authorization'), env.payme.merchantKey)) {
+  if (
+    !verifyPaymeAuth(request.headers.get('authorization'), env.payme.merchantKey) ||
+    (await isCallbackThrottled('payme', ip))
+  ) {
+    await recordCallbackFailure('payme', ip);
     const response = {
       jsonrpc: '2.0' as const,
       id: body.id,

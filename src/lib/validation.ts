@@ -2,6 +2,17 @@ import { z } from 'zod';
 
 const uzPhone = /^\+?998\d{9}$/;
 
+/**
+ * Numeric field that may be left blank. `z.coerce.number().optional()` turns an
+ * empty form value into 0, which silently stores a wrong coordinate.
+ */
+function optionalNumber(schema: z.ZodNumber) {
+  return z.preprocess(
+    (value) => (value === '' || value === null || value === undefined ? undefined : Number(value)),
+    schema.optional(),
+  );
+}
+
 export const phoneSchema = z
   .string()
   .trim()
@@ -41,8 +52,8 @@ export const addressSchema = z.object({
   line1: z.string().trim().min(5, "Manzilni to'liq kiriting"),
   landmark: z.string().trim().max(200).optional(),
   zone_id: z.string().uuid('Hududni tanlang'),
-  lat: z.coerce.number().min(-90).max(90).optional(),
-  lng: z.coerce.number().min(-180).max(180).optional(),
+  lat: optionalNumber(z.number().min(-90).max(90)),
+  lng: optionalNumber(z.number().min(-180).max(180)),
   is_default: z.coerce.boolean().optional(),
 });
 
@@ -113,9 +124,11 @@ export const zoneSchema = z.object({
   min_hours: z.coerce.number().int().min(0).max(720),
   max_hours: z.coerce.number().int().min(1).max(720),
   sla_hours: z.coerce.number().int().min(1).max(720),
-  center_lat: z.coerce.number().optional(),
-  center_lng: z.coerce.number().optional(),
-  radius_km: z.coerce.number().min(0).max(200).optional(),
+  // Blank form fields must stay empty instead of coercing to 0, which would
+  // place the zone at 0,0 with a zero-radius circle.
+  center_lat: optionalNumber(z.number().min(-90).max(90)),
+  center_lng: optionalNumber(z.number().min(-180).max(180)),
+  radius_km: optionalNumber(z.number().min(0).max(200)),
   is_active: z.coerce.boolean().optional(),
 });
 

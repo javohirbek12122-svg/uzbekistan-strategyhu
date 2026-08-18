@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import { RemoteImage as Image } from '@/components/ui/remote-image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Clock, Package, ShieldCheck, Star, Truck } from 'lucide-react';

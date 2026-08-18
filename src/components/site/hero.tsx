@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { Clock, ShieldCheck, Truck } from 'lucide-react';
 import type { Banner } from '@/lib/types';
@@ -9,14 +8,16 @@ export function Hero({ banners }: { banners: Banner[] }) {
   return (
     <section className="grid gap-3 lg:grid-cols-[2fr_1fr]">
       <div className="relative overflow-hidden rounded-2xl bg-brand-600 text-white">
+        {/*
+          Rendered as a background rather than through next/image: banner URLs are
+          owner-supplied and any host outside `remotePatterns` would throw and take
+          the whole page down.
+        */}
         {main?.image_url && (
-          <Image
-            src={main.image_url}
-            alt={main.title}
-            fill
-            sizes="(max-width: 1024px) 100vw, 800px"
-            className="object-cover opacity-35"
-            priority
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-cover bg-center opacity-35"
+            style={{ backgroundImage: `url(${JSON.stringify(main.image_url)})` }}
           />
         )}
         <div className="relative flex flex-col items-start gap-4 p-6 sm:p-10">

@@ -13,7 +13,10 @@ const DEFAULT_SESSION_HOURS = 8;
 const DEFAULT_MAX_ATTEMPTS = 5;
 const DEFAULT_LOCKOUT_MINUTES = 15;
 
-authenticator.options = { window: [1, 1], step: 30 };
+const TOTP_WINDOW_BACK = 1;
+const TOTP_WINDOW_FORWARD = 1;
+
+authenticator.options = { window: [TOTP_WINDOW_BACK, TOTP_WINDOW_FORWARD], step: 30 };
 
 export interface SecuritySettings {
   require_mfa: boolean;
@@ -35,10 +38,21 @@ export async function getSecuritySettings(): Promise<SecuritySettings> {
   };
 }
 
+/**
+ * Client IP for the allow-list check and the audit trail. `x-forwarded-for` is
+ * appended to by each proxy, so the trustworthy entry is the one written by the
+ * hop closest to the app: with `TRUSTED_PROXY_HOPS=n` the n-th value from the
+ * right is used, and client-supplied values to its left are ignored.
+ */
 export async function requestMeta() {
   const h = await headers();
-  const forwarded = h.get('x-forwarded-for');
-  const ip = forwarded?.split(',')[0]?.trim() || h.get('x-real-ip') || null;
+  const hops = Math.max(1, Number(process.env.TRUSTED_PROXY_HOPS ?? 1));
+  const chain = (h.get('x-forwarded-for') ?? '')
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const forwarded = chain.length >= hops ? chain[chain.length - hops] : undefined;
+  const ip = forwarded || h.get('x-real-ip') || null;
   return { ip, userAgent: h.get('user-agent') };
 }
 
@@ -57,7 +71,8 @@ export async function isIpAllowed(ip: string | null): Promise<boolean> {
   if (!ip) return false;
   const { data } = await serviceClient().from('admin_ip_allowlist').select('cidr');
   const list = (data ?? []) as { cidr: string }[];
-  if (list.length === 0) return true;
+  // Fail closed: an enabled but empty allow-list must not permit everyone.
+  if (list.length === 0) return false;
   return list.some((row) => ipInCidr(ip, row.cidr));
 }
 
@@ -164,9 +179,13 @@ export async function verifyTotp(userId: string, token: string): Promise<boolean
 
   if (!authenticator.check(normalized, secret)) return false;
 
-  // Replay protection: a code may be used once.
+  // Replay protection: a code may be used once. The verifier accepts a ±1-step
+  // window, so the used step must also block the neighbouring steps that would
+  // still accept the very same code.
   const step = Math.floor(Date.now() / 30_000);
-  if (record.last_used_step !== null && record.last_used_step >= step) return false;
+  if (record.last_used_step !== null && step <= record.last_used_step + TOTP_WINDOW_FORWARD + TOTP_WINDOW_BACK) {
+    return false;
+  }
 
   await serviceClient()
     .from('admin_mfa')
@@ -228,7 +247,15 @@ export async function revokeConsoleSession() {
       .update({ revoked_at: new Date().toISOString() })
       .eq('token_hash', sha256(token));
   }
-  store.delete(CONSOLE_COOKIE);
+  // The cookie was written with an explicit path; a path-less delete would emit
+  // a clearing directive for `/` and leave the real cookie in place.
+  store.set(CONSOLE_COOKIE, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: CONSOLE_PATH,
+    maxAge: 0,
+  });
 }
 
 export interface ConsoleIdentity {

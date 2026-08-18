@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { handleClickRequest, type ClickRequest } from '@/lib/payments/click';
 import { clickStore, logPaymentEvent } from '@/server/payments/stores';
+import { isCallbackThrottled, recordCallbackFailure } from '@/server/payments/throttle';
 import { serverEnv } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
@@ -21,7 +22,13 @@ export async function POST(request: Request) {
   const ip = forwarded?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip');
 
   const body = await readRequest(request);
+  if (await isCallbackThrottled('click', ip)) {
+    await recordCallbackFailure('click', ip);
+    return NextResponse.json({ error: -1, error_note: 'SIGN CHECK FAILED' });
+  }
+
   const response = await handleClickRequest(body, env.click.secretKey, clickStore());
+  if (response.error === -1) await recordCallbackFailure('click', ip);
 
   await logPaymentEvent({
     provider: 'click',

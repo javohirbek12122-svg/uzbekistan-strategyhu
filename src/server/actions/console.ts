@@ -1,10 +1,11 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { toDataURL } from 'qrcode';
 import { createClient } from '@/lib/supabase/server';
 import { serviceClient } from '@/lib/supabase/service';
+import { CATALOG_TAG } from '@/server/queries';
 import {
   consoleLoginSchema,
   orderStatusSchema,
@@ -191,7 +192,7 @@ export async function saveProduct(_prev: FormState, formData: FormData): Promise
   }
 
   revalidatePath(`${CONSOLE}/products`);
-  revalidatePath('/catalog');
+  revalidateTag(CATALOG_TAG);
   return { ok: true, message: 'Saqlandi' };
 }
 
@@ -212,6 +213,7 @@ export async function toggleProduct(formData: FormData): Promise<void> {
     after: { is_active: !data.is_active },
   });
   revalidatePath(`${CONSOLE}/products`);
+  revalidateTag(CATALOG_TAG);
 }
 
 export async function deleteProduct(formData: FormData): Promise<void> {
@@ -235,6 +237,7 @@ export async function deleteProduct(formData: FormData): Promise<void> {
     before,
   });
   revalidatePath(`${CONSOLE}/products`);
+  revalidateTag(CATALOG_TAG);
 }
 
 // ---------------------------------------------------------------------------
@@ -342,6 +345,7 @@ export async function saveZone(_prev: FormState, formData: FormData): Promise<Fo
     after: payload,
   });
   revalidatePath(`${CONSOLE}/delivery`);
+  revalidateTag(CATALOG_TAG);
   return { ok: true, message: 'Hudud saqlandi' };
 }
 
@@ -591,6 +595,7 @@ export async function moderateReview(formData: FormData): Promise<void> {
     entityId: id,
   });
   revalidatePath(`${CONSOLE}/reviews`);
+  revalidateTag(CATALOG_TAG);
 }
 
 export async function saveSetting(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -622,6 +627,7 @@ export async function saveSetting(_prev: FormState, formData: FormData): Promise
     after: value,
   });
   revalidatePath(`${CONSOLE}/settings`);
+  revalidateTag(CATALOG_TAG);
   return { ok: true, message: 'Sozlama saqlandi' };
 }
 
@@ -640,7 +646,7 @@ export async function saveBanner(_prev: FormState, formData: FormData): Promise<
   if (error) return { ok: false, message: error.message };
   await audit({ actorId: identity.userId, actorEmail: identity.email, action: 'banner.create', after: payload });
   revalidatePath(`${CONSOLE}/content`);
-  revalidatePath('/');
+  revalidateTag(CATALOG_TAG);
   return { ok: true, message: 'Banner saqlandi' };
 }
 
@@ -664,5 +670,6 @@ export async function publishNews(_prev: FormState, formData: FormData): Promise
   if (error) return { ok: false, message: error.message };
   await audit({ actorId: identity.userId, actorEmail: identity.email, action: 'news.publish', after: { slug } });
   revalidatePath(`${CONSOLE}/content`);
+  revalidateTag(CATALOG_TAG);
   return { ok: true, message: "E'lon joylandi" };
 }
