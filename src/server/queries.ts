@@ -6,6 +6,15 @@ import type { Address, Banner, Category, DeliveryZone, Order, Product, Ticket } 
 const PRODUCT_SELECT =
   'id, slug, sku, name_uz, name_ru, description_uz, price, compare_at_price, weight_gram, stock, reserved, max_per_order, rating, reviews_count, sold_count, is_active, is_featured, created_at, category_id, brand_id, product_images(id, url, position, alt, product_id), categories(id, slug, name_uz)';
 
+/**
+ * Storefront reads degrade to empty results, so a failed query would otherwise
+ * be invisible; every read reports its Postgres/RLS error to the server log.
+ */
+function pick<T>(label: string, result: { data: T; error: { message: string } | null }): T {
+  if (result.error) console.error(`[queries:${label}] ${result.error.message}`);
+  return result.data;
+}
+
 export interface CatalogFilters {
   category?: string;
   q?: string;
@@ -20,47 +29,51 @@ export const CATALOG_PAGE_SIZE = 24;
 export async function getCategories(): Promise<Category[]> {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('categories')
-    .select('*')
-    .eq('is_active', true)
-    .order('position', { ascending: true });
+  const data = pick(
+    'categories',
+    await supabase.from('categories').select('*').eq('is_active', true).order('position', { ascending: true }),
+  );
   return (data ?? []) as Category[];
 }
 
 export async function getBanners(): Promise<Banner[]> {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('banners')
-    .select('*')
-    .eq('is_active', true)
-    .order('position', { ascending: true });
+  const data = pick(
+    'banners',
+    await supabase.from('banners').select('*').eq('is_active', true).order('position', { ascending: true }),
+  );
   return (data ?? []) as Banner[];
 }
 
 export async function getFeaturedProducts(limit = 12): Promise<Product[]> {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('products')
-    .select(PRODUCT_SELECT)
-    .eq('is_active', true)
-    .eq('is_featured', true)
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  const data = pick(
+    'featured-products',
+    await supabase
+      .from('products')
+      .select(PRODUCT_SELECT)
+      .eq('is_active', true)
+      .eq('is_featured', true)
+      .order('created_at', { ascending: false })
+      .limit(limit),
+  );
   return (data ?? []) as unknown as Product[];
 }
 
 export async function getNewProducts(limit = 12): Promise<Product[]> {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('products')
-    .select(PRODUCT_SELECT)
-    .eq('is_active', true)
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  const data = pick(
+    'new-products',
+    await supabase
+      .from('products')
+      .select(PRODUCT_SELECT)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(limit),
+  );
   return (data ?? []) as unknown as Product[];
 }
 
@@ -77,11 +90,10 @@ export async function getCatalog(filters: CatalogFilters): Promise<{ products: P
     .range(from, from + CATALOG_PAGE_SIZE - 1);
 
   if (filters.category) {
-    const { data: category } = await supabase
-      .from('categories')
-      .select('id')
-      .eq('slug', filters.category)
-      .maybeSingle();
+    const category = pick(
+      'catalog-category',
+      await supabase.from('categories').select('id').eq('slug', filters.category).maybeSingle(),
+    );
     if (category) query = query.eq('category_id', category.id);
   }
   if (filters.q) {
@@ -108,38 +120,44 @@ export async function getCatalog(filters: CatalogFilters): Promise<{ products: P
       query = query.order('created_at', { ascending: false });
   }
 
-  const { data, count } = await query;
-  return { products: (data ?? []) as unknown as Product[], total: count ?? 0 };
+  const result = await query;
+  const data = pick('catalog', result);
+  return { products: (data ?? []) as unknown as Product[], total: result.count ?? 0 };
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   if (!isSupabaseConfigured) return null;
   const supabase = await createClient();
-  const { data } = await supabase.from('products').select(PRODUCT_SELECT).eq('slug', slug).maybeSingle();
+  const data = pick(
+    'product',
+    await supabase.from('products').select(PRODUCT_SELECT).eq('slug', slug).maybeSingle(),
+  );
   return (data as unknown as Product) ?? null;
 }
 
 export async function getProductReviews(productId: string) {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('reviews')
-    .select('id, rating, body, created_at, user_id')
-    .eq('product_id', productId)
-    .eq('is_approved', true)
-    .order('created_at', { ascending: false })
-    .limit(20);
+  const data = pick(
+    'product-reviews',
+    await supabase
+      .from('reviews')
+      .select('id, rating, body, created_at, user_id')
+      .eq('product_id', productId)
+      .eq('is_approved', true)
+      .order('created_at', { ascending: false })
+      .limit(20),
+  );
   return data ?? [];
 }
 
 export async function getZones(): Promise<DeliveryZone[]> {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('delivery_zones')
-    .select('*')
-    .eq('is_active', true)
-    .order('position', { ascending: true });
+  const data = pick(
+    'delivery-zones',
+    await supabase.from('delivery_zones').select('*').eq('is_active', true).order('position', { ascending: true }),
+  );
   return (data ?? []) as DeliveryZone[];
 }
 
@@ -151,10 +169,13 @@ export async function getCart() {
   } = await supabase.auth.getUser();
   if (!user) return { items: [], itemsTotal: 0, weightGram: 0, count: 0 };
 
-  const { data } = await supabase
-    .from('cart_items')
-    .select(`id, cart_id, product_id, quantity, products(${PRODUCT_SELECT})`)
-    .order('created_at', { ascending: true });
+  const data = pick(
+    'cart',
+    await supabase
+      .from('cart_items')
+      .select(`id, cart_id, product_id, quantity, products(${PRODUCT_SELECT})`)
+      .order('created_at', { ascending: true }),
+  );
 
   const items = (data ?? []) as unknown as { id: string; product_id: string; quantity: number; products: Product }[];
   const itemsTotal = items.reduce((sum, item) => sum + (item.products?.price ?? 0) * item.quantity, 0);
@@ -166,63 +187,70 @@ export async function getCart() {
 export async function getAddresses(): Promise<Address[]> {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('addresses')
-    .select('*, delivery_zones(id, name_uz, slug)')
-    .order('is_default', { ascending: false });
+  const data = pick(
+    'addresses',
+    await supabase
+      .from('addresses')
+      .select('*, delivery_zones(id, name_uz, slug)')
+      .order('is_default', { ascending: false }),
+  );
   return (data ?? []) as unknown as Address[];
 }
 
 export async function getMyOrders(): Promise<Order[]> {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('orders')
-    .select('*, order_items(*), shipments(*)')
-    .order('created_at', { ascending: false });
+  const data = pick(
+    'my-orders',
+    await supabase
+      .from('orders')
+      .select('*, order_items(*), shipments(*)')
+      .order('created_at', { ascending: false }),
+  );
   return (data ?? []) as unknown as Order[];
 }
 
 export async function getOrder(id: string): Promise<Order | null> {
   if (!isSupabaseConfigured) return null;
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('orders')
-    .select('*, order_items(*), shipments(*)')
-    .eq('id', id)
-    .maybeSingle();
+  const data = pick(
+    'order',
+    await supabase.from('orders').select('*, order_items(*), shipments(*)').eq('id', id).maybeSingle(),
+  );
   return (data as unknown as Order) ?? null;
 }
 
 export async function getOrderHistory(id: string) {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('order_status_history')
-    .select('*')
-    .eq('order_id', id)
-    .order('created_at', { ascending: true });
+  const data = pick(
+    'order-history',
+    await supabase
+      .from('order_status_history')
+      .select('*')
+      .eq('order_id', id)
+      .order('created_at', { ascending: true }),
+  );
   return data ?? [];
 }
 
 export async function getMyTickets(): Promise<Ticket[]> {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('tickets')
-    .select('*, ticket_messages(*)')
-    .order('created_at', { ascending: false });
+  const data = pick(
+    'my-tickets',
+    await supabase.from('tickets').select('*, ticket_messages(*)').order('created_at', { ascending: false }),
+  );
   return (data ?? []) as unknown as Ticket[];
 }
 
 export async function getMyNotifications() {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('notifications')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(20);
+  const data = pick(
+    'notifications',
+    await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(20),
+  );
   return data ?? [];
 }
 
@@ -235,6 +263,9 @@ export async function getStoreSettings(): Promise<{ name: string; phone: string;
   };
   if (!isSupabaseConfigured) return fallback;
   const supabase = await createClient();
-  const { data } = await supabase.from('settings').select('value').eq('key', 'store').maybeSingle();
+  const data = pick(
+    'store-settings',
+    await supabase.from('settings').select('value').eq('key', 'store').maybeSingle(),
+  );
   return { ...fallback, ...((data?.value as Record<string, string>) ?? {}) };
 }

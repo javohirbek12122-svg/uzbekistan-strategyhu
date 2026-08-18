@@ -153,7 +153,7 @@ begin
     promised_at, idempotency_key
   ) values (
     p_user_id,
-    case when p_provider = 'cash' then 'confirmed' else 'pending_payment' end,
+    case when p_provider = 'cash' then 'confirmed'::order_status else 'pending_payment'::order_status end,
     v_zone.id,
     v_addr.id,
     jsonb_build_object(
@@ -172,7 +172,7 @@ begin
     nullif(trim(coalesce(p_promo_code, '')), ''),
     v_weight,
     p_provider,
-    'pending',
+    'pending'::payment_status,
     nullif(trim(coalesce(p_note, '')), ''),
     now() + make_interval(hours => v_zone.sla_hours),
     p_idempotency_key
@@ -198,10 +198,10 @@ begin
   where ci.cart_id = v_cart_id and ci.product_id = p.id;
 
   insert into payments (order_id, provider, status, amount)
-  select v_order_id, p_provider, 'pending', total from orders where id = v_order_id;
+  select v_order_id, p_provider, 'pending'::payment_status, total from orders where id = v_order_id;
 
   insert into shipments (order_id, status, planned_at)
-  values (v_order_id, 'pending', now() + make_interval(hours => v_zone.min_hours));
+  values (v_order_id, 'pending'::shipment_status, now() + make_interval(hours => v_zone.min_hours));
 
   insert into order_status_history (order_id, from_status, to_status, changed_by, comment)
   select v_order_id, null, status, p_user_id, 'order created' from orders where id = v_order_id;

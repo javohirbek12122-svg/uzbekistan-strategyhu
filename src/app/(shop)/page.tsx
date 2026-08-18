@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Hero } from '@/components/site/hero';
 import { ProductGrid } from '@/components/shop/product-card';
+import { CategoryIcon } from '@/components/shop/category-icon';
 import { getBanners, getCategories, getFeaturedProducts, getNewProducts, getZones } from '@/server/queries';
 import { money } from '@/lib/format';
 import { formatEta } from '@/lib/delivery';
@@ -36,7 +37,7 @@ export default async function HomePage() {
                   href={`/catalog?category=${category.slug}`}
                   className="card flex flex-col items-center gap-2 p-4 text-center transition hover:shadow-lift"
                 >
-                  <span className="text-2xl">{category.icon ?? '🛒'}</span>
+                  <CategoryIcon name={category.icon} className="h-7 w-7 text-brand-600" />
                   <span className="text-sm font-medium">{category.name_uz}</span>
                 </Link>
               ))}

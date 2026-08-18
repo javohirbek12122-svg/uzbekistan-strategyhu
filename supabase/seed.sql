@@ -89,3 +89,12 @@ insert into banners (title, subtitle, link, position) values
   ('Guruch va donlar', 'Dehqondan to''g''ridan-to''g''ri', '/catalog?category=guruch', 2),
   ('Maishiy texnika', 'Artel mahsulotlariga chegirmalar', '/catalog?category=texnika', 3)
 on conflict do nothing;
+
+insert into news (slug, title, body, is_published, published_at) values
+  ('yangi-yetkazib-berish-zonalari', 'Yangi yetkazib berish hududlari',
+   'Zarkent, Soqoq va Kumushkon uchun yetkazib berish ishga tushdi. Buyurtma 4 soatdan 72 soat ichida yetkaziladi.',
+   true, now()),
+  ('kechikishga-qoplama', 'Kechikishga 5 000 so''m qoplama',
+   'Va''da qilingan vaqtda yetkazilmagan buyurtmalar uchun keyingi xaridga 5 000 so''m qoplama beriladi.',
+   true, now())
+on conflict (slug) do nothing;

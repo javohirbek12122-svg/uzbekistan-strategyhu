@@ -57,9 +57,11 @@ $$;
 revoke all on function private.has_role(app_role) from public;
 revoke all on function private.is_staff() from public;
 revoke all on function private.is_admin() from public;
-grant execute on function private.has_role(app_role) to authenticated, service_role;
-grant execute on function private.is_staff() to authenticated, service_role;
-grant execute on function private.is_admin() to authenticated, service_role;
+-- `anon` needs execute rights as well: the public catalog policies below call
+-- these helpers, and for an anonymous request they simply return false.
+grant execute on function private.has_role(app_role) to anon, authenticated, service_role;
+grant execute on function private.is_staff() to anon, authenticated, service_role;
+grant execute on function private.is_admin() to anon, authenticated, service_role;
 
 -- An admin role may only exist for an allow-listed e-mail address.
 create or replace function private.guard_admin_grant() returns trigger
@@ -136,7 +138,10 @@ create policy reviews_moderate on reviews for all using (private.is_staff()) wit
 -- Promo codes are validated server-side only; never listed to clients.
 create policy promo_staff on promo_codes for all using (private.is_staff()) with check (private.is_staff());
 
-create policy settings_read on settings for select using (private.is_staff());
+-- Only the storefront-facing keys are public; `security` and any future secret
+-- key stays staff-only.
+create policy settings_public_read on settings for select
+  using (key in ('store', 'payments', 'delivery', 'late_delivery_compensation') or private.is_staff());
 create policy settings_write on settings for all using (private.is_admin()) with check (private.is_admin());
 
 -- ---------------------------------------------------------------------------
@@ -247,7 +252,7 @@ create policy notifications_staff_write on notifications for all using (private.
 -- ---------------------------------------------------------------------------
 alter default privileges in schema public revoke all on tables from anon, authenticated;
 revoke all on all tables in schema public from anon;
-grant select on categories, brands, products, product_images, delivery_zones, banners, news, reviews to anon, authenticated;
+grant select on categories, brands, products, product_images, delivery_zones, banners, news, reviews, settings to anon, authenticated;
 grant select, insert, update, delete on carts, cart_items, addresses, tickets, ticket_messages, reviews to authenticated;
 grant select on orders, order_items, order_status_history, payments, shipments, delivery_compensations, refunds, profiles, user_roles to authenticated;
 grant update on profiles, notifications to authenticated;
