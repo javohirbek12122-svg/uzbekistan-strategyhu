@@ -19,9 +19,7 @@ import {
 } from '@/lib/validation';
 import {
   audit,
-  consumeRecoveryCode,
   enrollMfa,
-  getSecuritySettings,
   hasAdminRole,
   isEmailAllowlisted,
   isIpAllowed,
@@ -32,7 +30,6 @@ import {
   requireAdmin,
   requireConsole,
   revokeConsoleSession,
-  verifyTotp,
 } from '@/lib/security/console';
 
 const CONSOLE = '/__console';
@@ -46,7 +43,7 @@ export async function consoleLogin(_prev: FormState, formData: FormData): Promis
   const parsed = consoleLoginSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return zodToFormState(parsed.error);
 
-  const { email, password, token } = parsed.data;
+  const { email, password } = parsed.data;
   const { ip } = await requestMeta();
   const genericError: FormState = { ok: false, message: "Kirish ma'lumotlari xato" };
 
@@ -77,17 +74,6 @@ export async function consoleLogin(_prev: FormState, formData: FormData): Promis
     await recordLoginAttempt(email, false, ip);
     await audit({ actorId: data.user.id, actorEmail: email, action: 'console.login.no_role' });
     return genericError;
-  }
-
-  const settings = await getSecuritySettings();
-  if (settings.require_mfa) {
-    const okTotp = (await verifyTotp(data.user.id, token)) || (await consumeRecoveryCode(data.user.id, token));
-    if (!okTotp) {
-      await supabase.auth.signOut();
-      await recordLoginAttempt(email, false, ip);
-      await audit({ actorId: data.user.id, actorEmail: email, action: 'console.login.bad_totp' });
-      return { ok: false, message: "Tekshiruv kodi noto'g'ri" };
-    }
   }
 
   await issueConsoleSession(data.user.id);

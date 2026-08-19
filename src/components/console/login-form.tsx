@@ -29,21 +29,6 @@ export function ConsoleLoginForm() {
           required
         />
       </div>
-      <div>
-        <label className="label" htmlFor="token">
-          Autentifikator kodi
-        </label>
-        <input
-          id="token"
-          name="token"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          placeholder="123456"
-          className="input tracking-widest"
-          required
-        />
-        <p className="mt-1 text-xs text-ink-500">Kod ishlamasa, zaxira kodlardan birini kiriting.</p>
-      </div>
       {state?.message && <p className="text-sm text-red-600">{state.message}</p>}
       <SubmitButton className="w-full" pendingLabel="Tekshirilmoqda…">
         Kirish

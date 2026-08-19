@@ -292,20 +292,17 @@ export async function getConsoleIdentity(): Promise<ConsoleIdentity | null> {
   const { ip } = await requestMeta();
   if (!(await isIpAllowed(ip))) return null;
 
-  const settings = await getSecuritySettings();
-  if (settings.require_mfa) {
-    const store = await cookies();
-    const token = store.get(CONSOLE_COOKIE)?.value;
-    if (!token) return null;
-    const { data: session } = await serviceClient()
-      .from('admin_sessions')
-      .select('user_id, expires_at, revoked_at')
-      .eq('token_hash', sha256(token))
-      .maybeSingle();
-    if (!session || session.user_id !== user.id) return null;
-    if (session.revoked_at) return null;
-    if (new Date(session.expires_at).getTime() < Date.now()) return null;
-  }
+  const store = await cookies();
+  const token = store.get(CONSOLE_COOKIE)?.value;
+  if (!token) return null;
+  const { data: session } = await serviceClient()
+    .from('admin_sessions')
+    .select('user_id, expires_at, revoked_at')
+    .eq('token_hash', sha256(token))
+    .maybeSingle();
+  if (!session || session.user_id !== user.id) return null;
+  if (session.revoked_at) return null;
+  if (new Date(session.expires_at).getTime() < Date.now()) return null;
 
   return { userId: user.id, email: user.email, role: role as 'admin' | 'manager' };
 }

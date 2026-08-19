@@ -43,7 +43,7 @@ export const phoneSignInSchema = z.object({
 export const consoleLoginSchema = z.object({
   email: z.string().trim().email('Email xato'),
   password: z.string().min(1, 'Parol kiriting'),
-  token: z.string().trim().min(6, 'Tekshiruv kodi 6 raqam').max(11),
+  token: z.string().trim().optional(),
 });
 
 export const addressSchema = z.object({
