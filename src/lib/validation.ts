@@ -38,6 +38,11 @@ export const signInSchema = z.object({
   password: z.string().min(1, 'Parol kiriting'),
 });
 
+export const phoneSignInSchema = z.object({
+  phone: phoneSchema,
+  token: z.string().trim().regex(/^\d{6}$/, 'SMS kodi 6 raqamdan iborat bo\'lishi kerak').optional(),
+});
+
 export const consoleLoginSchema = z.object({
   email: z.string().trim().email('Email xato'),
   password: z.string().min(1, 'Parol kiriting'),
