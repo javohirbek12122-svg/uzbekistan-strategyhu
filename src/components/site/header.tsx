@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Bell, LayoutGrid, LogIn, Package, Search, ShoppingCart, Store, User } from 'lucide-react';
+import { Bell, LayoutGrid, LogIn, Package, Search, ShieldCheck, ShoppingCart, Store, User } from 'lucide-react';
 import { getCart, getCategories, getMyNotifications, getStoreSettings } from '@/server/queries';
 import { getSessionUser } from '@/lib/supabase/server';
 import { CategoryBar } from './category-bar';
@@ -81,9 +81,15 @@ export async function Header() {
             )}
           </Link>
           {user ? (
-            <Link href="/profile" className="btn-ghost px-2" aria-label="Profil">
-              <User className="h-5 w-5" />
-            </Link>
+            <>
+              <Link href="/__console/login" className="btn-ghost px-2" aria-label="Admin panel">
+                <ShieldCheck className="h-5 w-5" />
+                <span className="hidden xl:inline">Admin panel</span>
+              </Link>
+              <Link href="/profile" className="btn-ghost px-2" aria-label="Profil">
+                <User className="h-5 w-5" />
+              </Link>
+            </>
           ) : (
             <Link href="/auth/login" className="btn-primary">
               <LogIn className="h-4 w-4" />
