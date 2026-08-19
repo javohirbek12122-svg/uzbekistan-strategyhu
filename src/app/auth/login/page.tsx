@@ -15,11 +15,11 @@ export default async function LoginPage({
     <div className="card space-y-4 p-6">
       <div>
         <h1 className="text-lg font-bold">Hisobga kirish</h1>
-        <p className="text-sm text-ink-500">Email va parolingiz bilan kiring.</p>
+        <p className="text-sm text-ink-500">Email va parolingiz bilan oddiy kirish.</p>
       </div>
       {registered === '1' && (
         <p className="rounded-lg border border-brand-200 bg-brand-50 p-3 text-sm text-brand-700">
-          Tasdiqlash xati emailingizga yuborildi. Emaildagi havolani bosib, keyin shu yerga kiring.
+          Hisobingiz yaratildi. Endi shu email va parol bilan kiring.
         </p>
       )}
       <LoginForm next={next} />

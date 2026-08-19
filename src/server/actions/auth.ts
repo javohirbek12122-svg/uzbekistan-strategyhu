@@ -37,8 +37,25 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
           : 'Ro\'yxatdan o\'tishda xatolik yuz berdi. Email manzilini tekshirib, qayta urinib ko\'ring.';
     return { ok: false, message };
   }
-  if (data.session) redirect('/?welcome=1');
-  redirect('/auth/login?registered=1');
+  if (!data.user) return { ok: false, message: 'Hisob yaratilmadi. Qayta urinib ko\'ring.' };
+
+  // This project currently has email confirmation enabled but no working SMS
+  // provider. Confirm the newly created account server-side, then establish a
+  // normal session so the customer can use the site immediately.
+  if (!data.session) {
+    const { error: confirmError } = await serviceClient().auth.admin.updateUserById(data.user.id, {
+      email_confirm: true,
+    });
+    if (confirmError) return { ok: false, message: 'Hisob tasdiqlanmadi. Qayta urinib ko\'ring.' };
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    });
+    if (signInError) return { ok: false, message: 'Hisob yaratildi, lekin kirish amalga oshmadi.' };
+  }
+
+  redirect('/?welcome=1');
 }
 
 export async function signIn(_prev: FormState, formData: FormData): Promise<FormState> {
