@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { isSupabaseConfigured } from '@/lib/env';
 
 const CONSOLE_PREFIX = '/__console';
 
@@ -11,6 +12,8 @@ const CONSOLE_PREFIX = '/__console';
  */
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request });
+
+  if (!isSupabaseConfigured) return response;
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',

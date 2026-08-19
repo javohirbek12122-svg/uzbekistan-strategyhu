@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import { publicEnv } from '../env';
+import { isSupabaseConfigured, publicEnv } from '../env';
 
 /** Session-scoped client: every query is subject to RLS. */
 export async function createClient() {
@@ -23,6 +23,8 @@ export async function createClient() {
 }
 
 export async function getSessionUser() {
+  if (!isSupabaseConfigured) return null;
+
   const supabase = await createClient();
   const {
     data: { user },
