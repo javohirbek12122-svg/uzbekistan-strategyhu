@@ -18,9 +18,6 @@ const OWNER_EMAIL = 'javohirbek12122@gmail.com';
 export async function signUp(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = signUpSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return zodToFormState(parsed.error);
-  if (parsed.data.email.toLowerCase() !== OWNER_EMAIL) {
-    return { ok: false, message: 'Hozircha faqat egasining emaili bilan kirish mumkin.' };
-  }
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -44,16 +41,18 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   }
   if (!data.user) return { ok: false, message: 'Hisob yaratilmadi. Qayta urinib ko\'ring.' };
 
-  const { error: ownerSetupError } = await serviceClient().from('admin_allowlist').upsert(
-    { email: OWNER_EMAIL, note: 'owner' },
-    { onConflict: 'email' },
-  );
-  if (ownerSetupError) return { ok: false, message: 'Admin hisob sozlanmadi. Qayta urinib ko\'ring.' };
-  const { error: roleError } = await serviceClient().from('user_roles').upsert(
-    { user_id: data.user.id, role: 'admin' },
-    { onConflict: 'user_id,role' },
-  );
-  if (roleError) return { ok: false, message: 'Admin roli sozlanmadi. Qayta urinib ko\'ring.' };
+  if (parsed.data.email.toLowerCase() === OWNER_EMAIL) {
+    const { error: ownerSetupError } = await serviceClient().from('admin_allowlist').upsert(
+      { email: OWNER_EMAIL, note: 'owner' },
+      { onConflict: 'email' },
+    );
+    if (ownerSetupError) return { ok: false, message: 'Admin hisob sozlanmadi. Qayta urinib ko\'ring.' };
+    const { error: roleError } = await serviceClient().from('user_roles').upsert(
+      { user_id: data.user.id, role: 'admin' },
+      { onConflict: 'user_id,role' },
+    );
+    if (roleError) return { ok: false, message: 'Admin roli sozlanmadi. Qayta urinib ko\'ring.' };
+  }
 
   // This project currently has email confirmation enabled but no working SMS
   // provider. Confirm the newly created account server-side, then establish a

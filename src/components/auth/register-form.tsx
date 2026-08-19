@@ -12,16 +12,7 @@ export function RegisterForm() {
   return (
     <form action={action} className="space-y-3">
       <Field label="To'liq ism" name="full_name" errors={errors.full_name} required />
-      <Field
-        label="Email"
-        name="email"
-        type="email"
-        autoComplete="email"
-        value="javohirbek12122@gmail.com"
-        readOnly
-        errors={errors.email}
-        required
-      />
+      <Field label="Email" name="email" type="email" autoComplete="email" errors={errors.email} required />
       <Field label="Telefon" name="phone" placeholder="+998901234567" errors={errors.phone} required />
       <Field
         label="Parol"
