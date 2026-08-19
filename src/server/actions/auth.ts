@@ -78,11 +78,30 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   if (!parsed.success) return zodToFormState(parsed.error);
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: parsed.data.email,
+  const email = parsed.data.email.toLowerCase();
+  let { data, error } = await supabase.auth.signInWithPassword({
+    email,
     password: parsed.data.password,
   });
-  if (error) return { ok: false, message: 'Email yoki parol xato' };
+
+  // Older accounts may still be waiting for email confirmation. Since this
+  // storefront intentionally uses immediate account activation, repair that
+  // state once and retry the same login attempt.
+  if (error?.message.toLowerCase().includes('email not confirmed')) {
+    const users = await serviceClient().auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const user = users.data.users.find((candidate) => candidate.email?.toLowerCase() === email);
+    if (user) {
+      const confirmed = await serviceClient().auth.admin.updateUserById(user.id, { email_confirm: true });
+      if (!confirmed.error) {
+        ({ data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password: parsed.data.password,
+        }));
+      }
+    }
+  }
+
+  if (error || !data.user) return { ok: false, message: 'Email yoki parol xato' };
 
   // Blocked customers are signed out immediately.
   const { data: profile } = await serviceClient()
@@ -99,7 +118,7 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
 
   const next = String(formData.get('next') ?? '');
   // Console users always land on the console gate, never on a public page.
-  if (next.startsWith('/__console') && (await isEmailAllowlisted(parsed.data.email))) {
+  if (next.startsWith('/__console') && (await isEmailAllowlisted(email))) {
     redirect('/__console/login');
   }
   redirect(next && next.startsWith('/') ? next : '/');
