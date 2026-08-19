@@ -27,9 +27,14 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     },
   });
   if (error) {
-    const message = error.message.toLowerCase().includes('already registered')
+    const normalized = error.message.toLowerCase();
+    const message = normalized.includes('already registered') || normalized.includes('already been registered')
       ? 'Bu email bilan hisob allaqachon mavjud'
-      : 'Ro\'yxatdan o\'tishda xatolik yuz berdi';
+      : normalized.includes('password')
+        ? 'Parol kamida 10 belgi, katta-kichik harf va raqamdan iborat bo\'lsin'
+        : normalized.includes('rate limit')
+          ? 'Juda ko\'p urinish bo\'ldi. Bir necha daqiqadan keyin qayta urinib ko\'ring.'
+          : 'Ro\'yxatdan o\'tishda xatolik yuz berdi. Email manzilini tekshirib, qayta urinib ko\'ring.';
     return { ok: false, message };
   }
   redirect('/auth/login?registered=1');
