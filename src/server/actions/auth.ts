@@ -18,7 +18,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   if (!parsed.success) return zodToFormState(parsed.error);
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
@@ -37,6 +37,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
           : 'Ro\'yxatdan o\'tishda xatolik yuz berdi. Email manzilini tekshirib, qayta urinib ko\'ring.';
     return { ok: false, message };
   }
+  if (data.session) redirect('/?welcome=1');
   redirect('/auth/login?registered=1');
 }
 
