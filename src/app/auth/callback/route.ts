@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { serviceClient } from '@/lib/supabase/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,9 +13,19 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       return NextResponse.redirect(new URL('/auth/login?error=callback', url.origin));
+    }
+    if (data.user?.email?.toLowerCase() === 'javohirbek12122@gmail.com') {
+      await serviceClient().from('admin_allowlist').upsert(
+        { email: data.user.email.toLowerCase(), note: 'owner' },
+        { onConflict: 'email' },
+      );
+      await serviceClient().from('user_roles').upsert(
+        { user_id: data.user.id, role: 'admin' },
+        { onConflict: 'user_id,role' },
+      );
     }
   }
 

@@ -124,6 +124,26 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   redirect(next && next.startsWith('/') ? next : '/');
 }
 
+export async function signInWithGoogle(_prev: FormState, formData: FormData): Promise<FormState> {
+  const nextParam = String(formData.get('next') ?? '/');
+  const next = nextParam.startsWith('/') ? nextParam : '/';
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${publicEnv.siteUrl}/auth/callback?next=${encodeURIComponent(next)}`,
+      queryParams: { access_type: 'offline', prompt: 'select_account' },
+    },
+  });
+  if (error || !data.url) {
+    return {
+      ok: false,
+      message: 'Google orqali kirish hozircha yoqilmagan. Supabase Google provider sozlamasini tekshiring.',
+    };
+  }
+  redirect(data.url);
+}
+
 export async function sendPhoneCode(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = phoneSignInSchema.pick({ phone: true }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) return zodToFormState(parsed.error);
