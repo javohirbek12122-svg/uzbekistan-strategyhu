@@ -12,7 +12,16 @@ export function RegisterForm() {
   return (
     <form action={action} className="space-y-3">
       <Field label="To'liq ism" name="full_name" errors={errors.full_name} required />
-      <Field label="Email" name="email" type="email" autoComplete="email" errors={errors.email} required />
+      <Field
+        label="Email"
+        name="email"
+        type="email"
+        autoComplete="email"
+        value="javohirbek12122@gmail.com"
+        readOnly
+        errors={errors.email}
+        required
+      />
       <Field label="Telefon" name="phone" placeholder="+998901234567" errors={errors.phone} required />
       <Field
         label="Parol"
@@ -23,7 +32,7 @@ export function RegisterForm() {
         required
       />
       <p className="text-xs text-ink-500">
-        Parol kamida 10 belgi, katta-kichik harf va raqamdan iborat bo&apos;lishi kerak.
+        Parol kamida 8 belgidan iborat bo&apos;lishi kerak.
       </p>
       {state?.message && <p className="text-sm text-red-600">{state.message}</p>}
       <SubmitButton className="w-full">Ro&apos;yxatdan o&apos;tish</SubmitButton>

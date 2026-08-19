@@ -21,10 +21,7 @@ export const phoneSchema = z
 
 export const passwordSchema = z
   .string()
-  .min(10, "Parol kamida 10 belgidan iborat bo'lishi kerak")
-  .regex(/[a-z]/, 'Kichik harf bo\'lishi kerak')
-  .regex(/[A-Z]/, 'Katta harf bo\'lishi kerak')
-  .regex(/\d/, 'Raqam bo\'lishi kerak');
+  .min(8, "Parol kamida 8 belgidan iborat bo'lishi kerak");
 
 export const signUpSchema = z.object({
   full_name: z.string().trim().min(3, 'Ism kamida 3 belgi'),
