@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { serviceClient } from '@/lib/supabase/service';
+import { publicEnv } from '@/lib/env';
 import { signInSchema, signUpSchema, zodToFormState, type FormState } from '@/lib/validation';
 import { audit, isEmailAllowlisted } from '@/lib/security/console';
 
@@ -14,10 +15,18 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   const { error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: { data: { full_name: parsed.data.full_name, phone: parsed.data.phone } },
+    options: {
+      emailRedirectTo: `${publicEnv.siteUrl}/auth/callback?next=/`,
+      data: { full_name: parsed.data.full_name, phone: parsed.data.phone },
+    },
   });
-  if (error) return { ok: false, message: error.message };
-  redirect('/?welcome=1');
+  if (error) {
+    const message = error.message.toLowerCase().includes('already registered')
+      ? 'Bu email bilan hisob allaqachon mavjud'
+      : 'Ro\'yxatdan o\'tishda xatolik yuz berdi';
+    return { ok: false, message };
+  }
+  redirect('/auth/login?registered=1');
 }
 
 export async function signIn(_prev: FormState, formData: FormData): Promise<FormState> {

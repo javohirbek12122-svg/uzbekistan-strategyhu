@@ -4,8 +4,12 @@ import { LoginForm } from '@/components/auth/login-form';
 
 export const metadata: Metadata = { title: 'Kirish' };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const { next } = await searchParams;
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string; registered?: string }>;
+}) {
+  const { next, registered } = await searchParams;
 
   return (
     <div className="card space-y-4 p-6">
@@ -13,6 +17,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <h1 className="text-lg font-bold">Hisobga kirish</h1>
         <p className="text-sm text-ink-500">Email va parolingiz bilan kiring.</p>
       </div>
+      {registered === '1' && (
+        <p className="rounded-lg border border-brand-200 bg-brand-50 p-3 text-sm text-brand-700">
+          Tasdiqlash xati emailingizga yuborildi. Emaildagi havolani bosib, keyin shu yerga kiring.
+        </p>
+      )}
       <LoginForm next={next} />
       <p className="text-center text-sm text-ink-500">
         Hisobingiz yo&apos;qmi?{' '}
