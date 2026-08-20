@@ -29,6 +29,23 @@ export function ConsoleLoginForm() {
           required
         />
       </div>
+      <div>
+        <label className="label" htmlFor="token">
+          Autentifikator kodi
+        </label>
+        <input
+          id="token"
+          name="token"
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          placeholder="6 xonali kod yoki zaxira kodi"
+          className="input"
+        />
+        <p className="mt-1 text-xs text-ink-500">
+          Authenticator ilovasidagi kod yoki zaxira kodi. Birinchi marta kirishda avval quyidagi bo‘limda kodni ulang.
+        </p>
+      </div>
       {state?.message && <p className="text-sm text-red-600">{state.message}</p>}
       <SubmitButton className="w-full" pendingLabel="Tekshirilmoqda…">
         Kirish

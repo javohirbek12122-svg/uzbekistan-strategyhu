@@ -19,7 +19,10 @@ import {
 } from '@/lib/validation';
 import {
   audit,
+  consumeRecoveryCode,
   enrollMfa,
+  getMfa,
+  getSecuritySettings,
   hasAdminRole,
   isEmailAllowlisted,
   isIpAllowed,
@@ -30,6 +33,7 @@ import {
   requireAdmin,
   requireConsole,
   revokeConsoleSession,
+  verifyTotp,
 } from '@/lib/security/console';
 
 const CONSOLE = '/__console';
@@ -74,6 +78,35 @@ export async function consoleLogin(_prev: FormState, formData: FormData): Promis
     await recordLoginAttempt(email, false, ip);
     await audit({ actorId: data.user.id, actorEmail: email, action: 'console.login.no_role' });
     return genericError;
+  }
+
+  // Second factor: when MFA is required (default), verify a TOTP code or a
+  // recovery code before issuing the console session. Without this gate the
+  // entire MFA infrastructure (enrolment, TOTP, replay protection) is dead
+  // code and the console is protected by password alone.
+  const security = await getSecuritySettings();
+  if (security.require_mfa) {
+    const mfa = await getMfa(data.user.id);
+    if (!mfa) {
+      await supabase.auth.signOut();
+      await recordLoginAttempt(email, false, ip);
+      return {
+        ok: false,
+        message: 'Autentifikator ulanmagan. Avval /auth/login orqali kiring va quyidagi bo‘limda kodni ulang.',
+      };
+    }
+    const code = parsed.data.token?.trim() ?? '';
+    if (!code) {
+      await recordLoginAttempt(email, false, ip);
+      return { ok: false, message: 'Autentifikator kodini kiriting.' };
+    }
+    const totpOk = await verifyTotp(data.user.id, code);
+    const recoveryOk = !totpOk && (await consumeRecoveryCode(data.user.id, code));
+    if (!totpOk && !recoveryOk) {
+      await recordLoginAttempt(email, false, ip);
+      await audit({ actorId: data.user.id, actorEmail: email, action: 'console.login.bad_mfa' });
+      return { ok: false, message: 'Kod noto‘g‘ri yoki muddati tugagan.' };
+    }
   }
 
   await issueConsoleSession(data.user.id);

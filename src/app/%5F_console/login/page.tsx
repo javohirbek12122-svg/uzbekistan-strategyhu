@@ -1,5 +1,6 @@
 import { ShieldCheck } from 'lucide-react';
 import { ConsoleLoginForm } from '@/components/console/login-form';
+import { MfaEnrolment } from '@/components/console/mfa-enrolment';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +22,8 @@ export default function ConsoleLoginPage() {
           </p>
           <ConsoleLoginForm />
         </div>
+
+        <MfaEnrolment />
       </div>
     </div>
   );
