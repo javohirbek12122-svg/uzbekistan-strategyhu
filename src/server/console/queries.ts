@@ -1,5 +1,5 @@
 import 'server-only';
-import { serviceClient } from '@/lib/supabase/service';
+import { requireServiceClient } from '@/lib/supabase/service';
 import { requireConsole } from '@/lib/security/console';
 import type { AuditLogRow, Banner, Category, DeliveryZone, Order, Product, Ticket } from '@/lib/types';
 
@@ -18,7 +18,7 @@ export interface ProfileRow {
 export async function consoleProducts(search = '', page = 1) {
   await requireConsole();
   const from = (page - 1) * PAGE;
-  let query = serviceClient()
+  let query = requireServiceClient()
     .from('products')
     .select('*, product_images(id, url, position, alt, product_id), categories(id, slug, name_uz)', { count: 'exact' })
     .order('created_at', { ascending: false })
@@ -30,7 +30,7 @@ export async function consoleProducts(search = '', page = 1) {
 
 export async function consoleProduct(id: string) {
   await requireConsole();
-  const client = serviceClient();
+  const client = requireServiceClient();
   const [{ data: product }, { data: history }] = await Promise.all([
     client.from('products').select('*, product_images(id, url, position, alt, product_id)').eq('id', id).maybeSingle(),
     client.from('price_history').select('*').eq('product_id', id).order('created_at', { ascending: false }).limit(20),
@@ -43,14 +43,14 @@ export async function consoleProduct(id: string) {
 
 export async function consoleCategories(): Promise<Category[]> {
   await requireConsole();
-  const { data } = await serviceClient().from('categories').select('*').order('position');
+  const { data } = await requireServiceClient().from('categories').select('*').order('position');
   return (data ?? []) as Category[];
 }
 
 export async function consoleOrders(status = '', search = '', page = 1) {
   await requireConsole();
   const from = (page - 1) * PAGE;
-  let query = serviceClient()
+  let query = requireServiceClient()
     .from('orders')
     .select('*, order_items(*), shipments(*), profiles(full_name, phone, email)', { count: 'exact' })
     .order('created_at', { ascending: false })
@@ -63,7 +63,7 @@ export async function consoleOrders(status = '', search = '', page = 1) {
 
 export async function consoleOrder(id: string) {
   await requireConsole();
-  const client = serviceClient();
+  const client = requireServiceClient();
   const [{ data: order }, { data: history }, { data: payments }, { data: couriers }] = await Promise.all([
     client
       .from('orders')
@@ -89,7 +89,7 @@ export async function consoleOrder(id: string) {
 export async function consoleUsers(search = '', page = 1) {
   await requireConsole();
   const from = (page - 1) * PAGE;
-  let query = serviceClient()
+  let query = requireServiceClient()
     .from('profiles')
     .select('id, email, full_name, phone, is_blocked, created_at, user_roles(role)', { count: 'exact' })
     .order('created_at', { ascending: false })
@@ -103,13 +103,13 @@ export async function consoleUsers(search = '', page = 1) {
 
 export async function consoleZones(): Promise<DeliveryZone[]> {
   await requireConsole();
-  const { data } = await serviceClient().from('delivery_zones').select('*').order('position');
+  const { data } = await requireServiceClient().from('delivery_zones').select('*').order('position');
   return (data ?? []) as DeliveryZone[];
 }
 
 export async function consoleDeliveryBoard() {
   await requireConsole();
-  const client = serviceClient();
+  const client = requireServiceClient();
   const [{ data: shipments }, { data: compensations }] = await Promise.all([
     client
       .from('shipments')
@@ -129,7 +129,7 @@ export async function consoleDeliveryBoard() {
 export async function consolePayments(page = 1) {
   await requireConsole();
   const from = (page - 1) * PAGE;
-  const client = serviceClient();
+  const client = requireServiceClient();
   const [{ data: payments, count }, { data: events }] = await Promise.all([
     client
       .from('payments')
@@ -143,7 +143,7 @@ export async function consolePayments(page = 1) {
 
 export async function consoleTickets(status = '') {
   await requireConsole();
-  let query = serviceClient()
+  let query = requireServiceClient()
     .from('tickets')
     .select('*, ticket_messages(*), profiles(full_name, email)')
     .order('created_at', { ascending: false })
@@ -155,7 +155,7 @@ export async function consoleTickets(status = '') {
 
 export async function consoleReviews() {
   await requireConsole();
-  const { data } = await serviceClient()
+  const { data } = await requireServiceClient()
     .from('reviews')
     .select('*, products(name_uz, slug), profiles(full_name, email)')
     .order('created_at', { ascending: false })
@@ -165,7 +165,7 @@ export async function consoleReviews() {
 
 export async function consoleContent() {
   await requireConsole();
-  const client = serviceClient();
+  const client = requireServiceClient();
   const [{ data: banners }, { data: news }] = await Promise.all([
     client.from('banners').select('*').order('position'),
     client.from('news').select('*').order('created_at', { ascending: false }).limit(50),
@@ -185,13 +185,13 @@ export async function consoleContent() {
 
 export async function consoleSettings() {
   await requireConsole();
-  const { data } = await serviceClient().from('settings').select('*').order('key');
+  const { data } = await requireServiceClient().from('settings').select('*').order('key');
   return (data ?? []) as { key: string; value: unknown; updated_at: string }[];
 }
 
 export async function consoleSecurity() {
   await requireConsole();
-  const client = serviceClient();
+  const client = requireServiceClient();
   const [{ data: allowlist }, { data: sessions }, { data: attempts }, { data: audits }, { data: ips }] =
     await Promise.all([
       client.from('admin_allowlist').select('email, note, created_at').order('created_at'),

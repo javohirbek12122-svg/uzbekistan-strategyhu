@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { serviceClient } from '@/lib/supabase/service';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,14 +19,17 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL('/auth/login?error=callback', url.origin));
     }
     if (data.user?.email?.toLowerCase() === 'javohirbek12122@gmail.com') {
-      await serviceClient().from('admin_allowlist').upsert(
-        { email: data.user.email.toLowerCase(), note: 'owner' },
-        { onConflict: 'email' },
-      );
-      await serviceClient().from('user_roles').upsert(
-        { user_id: data.user.id, role: 'admin' },
-        { onConflict: 'user_id,role' },
-      );
+      const admin = serviceClient() as SupabaseClient | null;
+      if (admin) {
+        await admin.from('admin_allowlist').upsert(
+          { email: data.user.email.toLowerCase(), note: 'owner' },
+          { onConflict: 'email' },
+        );
+        await admin.from('user_roles').upsert(
+          { user_id: data.user.id, role: 'admin' },
+          { onConflict: 'user_id,role' },
+        );
+      }
     }
   }
 

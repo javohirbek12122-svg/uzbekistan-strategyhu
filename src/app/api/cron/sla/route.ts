@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { serviceClient } from '@/lib/supabase/service';
+import { requireServiceClient } from '@/lib/supabase/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'forbidden' }, { status: 401 });
   }
 
-  const { data, error } = await serviceClient().rpc('apply_late_compensations');
+  const { data, error } = await requireServiceClient().rpc('apply_late_compensations');
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ applied: data ?? 0 });
 }

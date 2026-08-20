@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient, getSessionUser } from '@/lib/supabase/server';
-import { serviceClient } from '@/lib/supabase/service';
+import { requireServiceClient } from '@/lib/supabase/service';
 import {
   addressSchema,
   cartItemSchema,
@@ -26,7 +26,7 @@ async function requireUser() {
 }
 
 async function getOrCreateCartId(userId: string): Promise<string> {
-  const client = serviceClient();
+  const client = requireServiceClient();
   const { data: existing } = await client.from('carts').select('id').eq('user_id', userId).maybeSingle();
   if (existing) return existing.id as string;
   const { data, error } = await client.from('carts').insert({ user_id: userId }).select('id').single();
@@ -42,7 +42,7 @@ export async function addToCart(_prev: FormState, formData: FormData): Promise<F
   });
   if (!parsed.success) return zodToFormState(parsed.error);
 
-  const client = serviceClient();
+  const client = requireServiceClient();
   const { data: product } = await client
     .from('products')
     .select('id, stock, reserved, max_per_order, is_active')
@@ -83,7 +83,7 @@ export async function setCartQuantity(formData: FormData): Promise<void> {
   });
   if (!parsed.success) return;
 
-  const client = serviceClient();
+  const client = requireServiceClient();
   const cartId = await getOrCreateCartId(user.id);
   await client
     .from('cart_items')
@@ -96,7 +96,7 @@ export async function setCartQuantity(formData: FormData): Promise<void> {
 export async function removeCartItem(formData: FormData): Promise<void> {
   const user = await requireUser();
   const productId = String(formData.get('product_id') ?? '');
-  const client = serviceClient();
+  const client = requireServiceClient();
   const cartId = await getOrCreateCartId(user.id);
   await client.from('cart_items').delete().eq('cart_id', cartId).eq('product_id', productId);
   revalidatePath('/cart');
@@ -147,7 +147,7 @@ export async function placeOrder(_prev: FormState, formData: FormData): Promise<
   const parsed = checkoutSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return zodToFormState(parsed.error);
 
-  const client = serviceClient();
+  const client = requireServiceClient();
   // Idempotency: repeated submits of the same checkout reuse the same order.
   const idempotencyKey = `${user.id}:${formData.get('idempotency_key') ?? ''}`;
 
@@ -184,7 +184,7 @@ export async function placeOrder(_prev: FormState, formData: FormData): Promise<
 /** Builds the provider redirect for an unpaid order (amount read from the DB). */
 export async function startPayment(orderId: string): Promise<{ url?: string; message?: string }> {
   const user = await requireUser();
-  const client = serviceClient();
+  const client = requireServiceClient();
   const { data: order } = await client
     .from('orders')
     .select('id, user_id, total, payment_provider, payment_status')
@@ -230,7 +230,7 @@ export async function createTicket(_prev: FormState, formData: FormData): Promis
   const parsed = ticketSchema.safeParse({ ...raw, order_id: raw.order_id || undefined });
   if (!parsed.success) return zodToFormState(parsed.error);
 
-  const client = serviceClient();
+  const client = requireServiceClient();
   const { data: ticket, error } = await client
     .from('tickets')
     .insert({
@@ -286,7 +286,7 @@ export async function submitReview(_prev: FormState, formData: FormData): Promis
   const parsed = reviewSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return zodToFormState(parsed.error);
 
-  const client = serviceClient();
+  const client = requireServiceClient();
   // Only buyers of a delivered order may review.
   const { data: purchased } = await client
     .from('order_items')
@@ -318,7 +318,7 @@ export async function submitReview(_prev: FormState, formData: FormData): Promis
 /** Clears the unread badge for the signed-in customer. */
 export async function markNotificationsRead(): Promise<void> {
   const user = await requireUser();
-  await serviceClient()
+  await requireServiceClient()
     .from('notifications')
     .update({ read_at: new Date().toISOString() })
     .eq('user_id', user.id)

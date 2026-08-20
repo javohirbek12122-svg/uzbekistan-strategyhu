@@ -1,5 +1,5 @@
 import 'server-only';
-import { serviceClient } from '@/lib/supabase/service';
+import { requireServiceClient } from '@/lib/supabase/service';
 
 const WINDOW_MINUTES = 10;
 const MAX_FAILURES = 20;
@@ -11,7 +11,7 @@ const MAX_FAILURES = 20;
  * without touching orders.
  */
 export async function recordCallbackFailure(provider: 'payme' | 'click', ip: string | null) {
-  await serviceClient()
+  await requireServiceClient()
     .from('login_attempts')
     .insert({ identifier: ip ?? 'unknown', ip, scope: `payment:${provider}`, successful: false });
 }
@@ -19,7 +19,7 @@ export async function recordCallbackFailure(provider: 'payme' | 'click', ip: str
 export async function isCallbackThrottled(provider: 'payme' | 'click', ip: string | null): Promise<boolean> {
   if (!ip) return false;
   const since = new Date(Date.now() - WINDOW_MINUTES * 60_000).toISOString();
-  const { count } = await serviceClient()
+  const { count } = await requireServiceClient()
     .from('login_attempts')
     .select('id', { count: 'exact', head: true })
     // `identifier` holds the IP so the (identifier, scope, created_at) index applies.

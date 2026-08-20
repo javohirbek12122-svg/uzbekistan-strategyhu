@@ -1,5 +1,5 @@
 import 'server-only';
-import { serviceClient } from '@/lib/supabase/service';
+import { requireServiceClient } from '@/lib/supabase/service';
 import type { PaymeStore, PaymeTransactionView } from '@/lib/payments/payme';
 import type { ClickStore, ClickOrderView } from '@/lib/payments/click';
 
@@ -37,7 +37,7 @@ const PAYMENT_COLUMNS =
 
 /** Looks up the pending payment row of an order for a given provider. */
 async function findPayableOrder(orderId: string, provider: 'payme' | 'click') {
-  const client = serviceClient();
+  const client = requireServiceClient();
   const { data: order } = await client
     .from('orders')
     .select('id, total, status, payment_status')
@@ -59,7 +59,7 @@ async function findPayableOrder(orderId: string, provider: 'payme' | 'click') {
 }
 
 export function paymeStore(): PaymeStore {
-  const client = serviceClient();
+  const client = requireServiceClient();
 
   return {
     async findOrder(orderId) {
@@ -161,7 +161,7 @@ export function paymeStore(): PaymeStore {
 }
 
 export function clickStore(): ClickStore {
-  const client = serviceClient();
+  const client = requireServiceClient();
 
   return {
     async findOrder(orderId): Promise<ClickOrderView | null> {
@@ -215,7 +215,7 @@ export async function logPaymentEvent(input: {
   signatureValid: boolean;
   ip: string | null;
 }) {
-  await serviceClient().from('payment_events').insert({
+  await requireServiceClient().from('payment_events').insert({
     provider: input.provider,
     method: input.method ?? null,
     request: input.request as never,

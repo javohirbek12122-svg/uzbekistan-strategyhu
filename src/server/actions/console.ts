@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { toDataURL } from 'qrcode';
 import { createClient } from '@/lib/supabase/server';
-import { serviceClient } from '@/lib/supabase/service';
+import { requireServiceClient } from '@/lib/supabase/service';
 import { CATALOG_TAG } from '@/server/queries';
 import {
   consoleLoginSchema,
@@ -109,7 +109,7 @@ export async function startMfaEnrolment(): Promise<
   if (!(await isEmailAllowlisted(user.email))) return { ok: false, message: 'Ruxsat yo\'q' };
   if (!(await hasAdminRole(user.id))) return { ok: false, message: 'Ruxsat yo\'q' };
 
-  const { data: existing } = await serviceClient()
+  const { data: existing } = await requireServiceClient()
     .from('admin_mfa')
     .select('confirmed_at')
     .eq('user_id', user.id)
@@ -132,7 +132,7 @@ export async function saveProduct(_prev: FormState, formData: FormData): Promise
   const parsed = productSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return zodToFormState(parsed.error);
 
-  const client = serviceClient();
+  const client = requireServiceClient();
   const { image_url, id, ...fields } = parsed.data;
   const payload = {
     ...fields,
@@ -185,7 +185,7 @@ export async function saveProduct(_prev: FormState, formData: FormData): Promise
 export async function toggleProduct(formData: FormData): Promise<void> {
   const identity = await requireConsole();
   const id = String(formData.get('id') ?? '');
-  const client = serviceClient();
+  const client = requireServiceClient();
   const { data } = await client.from('products').select('is_active').eq('id', id).maybeSingle();
   if (!data) return;
   await client.from('products').update({ is_active: !data.is_active }).eq('id', id);
@@ -205,7 +205,7 @@ export async function toggleProduct(formData: FormData): Promise<void> {
 export async function deleteProduct(formData: FormData): Promise<void> {
   const identity = await requireAdmin();
   const id = String(formData.get('id') ?? '');
-  const client = serviceClient();
+  const client = requireServiceClient();
   const { data: before } = await client.from('products').select('*').eq('id', id).maybeSingle();
   // Products referenced by orders are archived instead of deleted.
   const { count } = await client.from('order_items').select('id', { count: 'exact', head: true }).eq('product_id', id);
@@ -234,7 +234,7 @@ export async function updateOrderStatus(_prev: FormState, formData: FormData): P
   const parsed = orderStatusSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return zodToFormState(parsed.error);
 
-  const client = serviceClient();
+  const client = requireServiceClient();
   const { data: before } = await client
     .from('orders')
     .select('status, payment_status')
@@ -290,7 +290,7 @@ export async function assignCourier(formData: FormData): Promise<void> {
   const identity = await requireConsole();
   const orderId = String(formData.get('order_id') ?? '');
   const courierId = String(formData.get('courier_id') ?? '');
-  const client = serviceClient();
+  const client = requireServiceClient();
   await client
     .from('shipments')
     .update({ courier_id: courierId || null, status: courierId ? 'assigned' : 'pending' })
@@ -315,7 +315,7 @@ export async function saveZone(_prev: FormState, formData: FormData): Promise<Fo
     return { ok: false, message: "Maksimal narx bazadan kichik bo'lmasligi kerak" };
   }
 
-  const client = serviceClient();
+  const client = requireServiceClient();
   const { id, ...payload } = parsed.data;
   const { error } = id
     ? await client.from('delivery_zones').update(payload).eq('id', id)
@@ -337,7 +337,7 @@ export async function saveZone(_prev: FormState, formData: FormData): Promise<Fo
 
 export async function runLateCompensations(): Promise<void> {
   const identity = await requireConsole();
-  const { data } = await serviceClient().rpc('apply_late_compensations');
+  const { data } = await requireServiceClient().rpc('apply_late_compensations');
   await audit({
     actorId: identity.userId,
     actorEmail: identity.email,
@@ -351,7 +351,7 @@ export async function refundOrder(_prev: FormState, formData: FormData): Promise
   const identity = await requireAdmin();
   const orderId = String(formData.get('order_id') ?? '');
   const reason = String(formData.get('reason') ?? '');
-  const client = serviceClient();
+  const client = requireServiceClient();
 
   const { data: payment } = await client
     .from('payments')
@@ -393,7 +393,7 @@ export async function setUserRole(_prev: FormState, formData: FormData): Promise
   const parsed = roleSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return zodToFormState(parsed.error);
 
-  const client = serviceClient();
+  const client = requireServiceClient();
   if (parsed.data.role === 'admin' || parsed.data.role === 'manager') {
     const { data: profile } = await client.from('profiles').select('email').eq('id', parsed.data.user_id).maybeSingle();
     if (!profile?.email || !(await isEmailAllowlisted(profile.email))) {
@@ -423,7 +423,7 @@ export async function revokeUserRole(formData: FormData): Promise<void> {
   const userId = String(formData.get('user_id') ?? '');
   const role = String(formData.get('role') ?? '');
   if (userId === identity.userId && role === 'admin') return; // never lock yourself out
-  await serviceClient().from('user_roles').delete().eq('user_id', userId).eq('role', role);
+  await requireServiceClient().from('user_roles').delete().eq('user_id', userId).eq('role', role);
   await audit({
     actorId: identity.userId,
     actorEmail: identity.email,
@@ -438,7 +438,7 @@ export async function revokeUserRole(formData: FormData): Promise<void> {
 export async function toggleUserBlock(formData: FormData): Promise<void> {
   const identity = await requireConsole();
   const userId = String(formData.get('user_id') ?? '');
-  const client = serviceClient();
+  const client = requireServiceClient();
   const { data } = await client.from('profiles').select('is_blocked').eq('id', userId).maybeSingle();
   if (!data) return;
   await client.from('profiles').update({ is_blocked: !data.is_blocked }).eq('id', userId);
@@ -458,7 +458,7 @@ export async function addAllowlistEmail(_prev: FormState, formData: FormData): P
   const identity = await requireAdmin();
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
   if (!email.includes('@')) return { ok: false, message: 'Email xato' };
-  const { error } = await serviceClient().from('admin_allowlist').insert({ email, note: 'console' });
+  const { error } = await requireServiceClient().from('admin_allowlist').insert({ email, note: 'console' });
   if (error) return { ok: false, message: error.message };
   await audit({ actorId: identity.userId, actorEmail: identity.email, action: 'allowlist.add', after: { email } });
   revalidatePath(`${CONSOLE}/security`);
@@ -469,7 +469,7 @@ export async function removeAllowlistEmail(formData: FormData): Promise<void> {
   const identity = await requireAdmin();
   const email = String(formData.get('email') ?? '');
   if (email === identity.email) return; // never remove yourself
-  await serviceClient().from('admin_allowlist').delete().eq('email', email);
+  await requireServiceClient().from('admin_allowlist').delete().eq('email', email);
   await audit({ actorId: identity.userId, actorEmail: identity.email, action: 'allowlist.remove', before: { email } });
   revalidatePath(`${CONSOLE}/security`);
 }
@@ -481,7 +481,7 @@ export async function addIpAllowlist(_prev: FormState, formData: FormData): Prom
   const cidr = String(formData.get('cidr') ?? '').trim();
   if (!/^[0-9a-fA-F.:]+(\/\d{1,3})?$/.test(cidr)) return { ok: false, message: "IP yoki CIDR noto'g'ri" };
   const note = String(formData.get('note') ?? '') || null;
-  const { error } = await serviceClient().from('admin_ip_allowlist').insert({ cidr, note });
+  const { error } = await requireServiceClient().from('admin_ip_allowlist').insert({ cidr, note });
   if (error) return { ok: false, message: error.message };
   await audit({ actorId: identity.userId, actorEmail: identity.email, action: 'ip_allowlist.add', after: { cidr } });
   revalidatePath(`${CONSOLE}/security`);
@@ -491,7 +491,7 @@ export async function addIpAllowlist(_prev: FormState, formData: FormData): Prom
 export async function removeIpAllowlist(formData: FormData): Promise<void> {
   const identity = await requireAdmin();
   const cidr = String(formData.get('cidr') ?? '');
-  await serviceClient().from('admin_ip_allowlist').delete().eq('cidr', cidr);
+  await requireServiceClient().from('admin_ip_allowlist').delete().eq('cidr', cidr);
   await audit({ actorId: identity.userId, actorEmail: identity.email, action: 'ip_allowlist.remove', before: { cidr } });
   revalidatePath(`${CONSOLE}/security`);
 }
@@ -500,7 +500,7 @@ export async function removeIpAllowlist(formData: FormData): Promise<void> {
 export async function revokeAdminSession(formData: FormData): Promise<void> {
   const identity = await requireAdmin();
   const id = String(formData.get('id') ?? '');
-  await serviceClient()
+  await requireServiceClient()
     .from('admin_sessions')
     .update({ revoked_at: new Date().toISOString() })
     .eq('id', id)
@@ -520,7 +520,7 @@ export async function replyTicketAsStaff(_prev: FormState, formData: FormData): 
   const parsed = ticketReplySchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return zodToFormState(parsed.error);
 
-  const client = serviceClient();
+  const client = requireServiceClient();
   await client.from('ticket_messages').insert({
     ticket_id: parsed.data.ticket_id,
     author_id: identity.userId,
@@ -551,7 +551,7 @@ export async function setTicketStatus(formData: FormData): Promise<void> {
   const identity = await requireConsole();
   const ticketId = String(formData.get('ticket_id') ?? '');
   const status = String(formData.get('status') ?? '');
-  await serviceClient().from('tickets').update({ status }).eq('id', ticketId);
+  await requireServiceClient().from('tickets').update({ status }).eq('id', ticketId);
   await audit({
     actorId: identity.userId,
     actorEmail: identity.email,
@@ -567,7 +567,7 @@ export async function moderateReview(formData: FormData): Promise<void> {
   const identity = await requireConsole();
   const id = String(formData.get('id') ?? '');
   const approve = String(formData.get('approve') ?? '') === '1';
-  const client = serviceClient();
+  const client = requireServiceClient();
   if (approve) {
     await client.from('reviews').update({ is_approved: true }).eq('id', id);
   } else {
@@ -596,7 +596,7 @@ export async function saveSetting(_prev: FormState, formData: FormData): Promise
     return { ok: false, message: "Qiymat to'g'ri JSON bo'lishi kerak" };
   }
 
-  const client = serviceClient();
+  const client = requireServiceClient();
   const { data: before } = await client.from('settings').select('value').eq('key', parsed.data.key).maybeSingle();
   const { error } = await client
     .from('settings')
@@ -628,7 +628,7 @@ export async function saveBanner(_prev: FormState, formData: FormData): Promise<
     link: String(formData.get('link') ?? '') || null,
     position: Number(formData.get('position') ?? 0),
   };
-  const { error } = await serviceClient().from('banners').insert(payload);
+  const { error } = await requireServiceClient().from('banners').insert(payload);
   if (error) return { ok: false, message: error.message };
   await audit({ actorId: identity.userId, actorEmail: identity.email, action: 'banner.create', after: payload });
   revalidatePath(`${CONSOLE}/content`);
@@ -646,7 +646,7 @@ export async function publishNews(_prev: FormState, formData: FormData): Promise
     .replace(/[^a-z0-9\u0400-\u04ff]+/g, '-')
     .replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;
 
-  const { error } = await serviceClient().from('news').insert({
+  const { error } = await requireServiceClient().from('news').insert({
     slug,
     title,
     body,

@@ -41,13 +41,15 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   }
   if (!data.user) return { ok: false, message: 'Hisob yaratilmadi. Qayta urinib ko\'ring.' };
 
-  if (parsed.data.email.toLowerCase() === OWNER_EMAIL) {
-    const { error: ownerSetupError } = await serviceClient().from('admin_allowlist').upsert(
+  const admin = serviceClient();
+
+  if (parsed.data.email.toLowerCase() === OWNER_EMAIL && admin) {
+    const { error: ownerSetupError } = await admin.from('admin_allowlist').upsert(
       { email: OWNER_EMAIL, note: 'owner' },
       { onConflict: 'email' },
     );
     if (ownerSetupError) return { ok: false, message: 'Admin hisob sozlanmadi. Qayta urinib ko\'ring.' };
-    const { error: roleError } = await serviceClient().from('user_roles').upsert(
+    const { error: roleError } = await admin.from('user_roles').upsert(
       { user_id: data.user.id, role: 'admin' },
       { onConflict: 'user_id,role' },
     );
@@ -57,8 +59,8 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   // This project currently has email confirmation enabled but no working SMS
   // provider. Confirm the newly created account server-side, then establish a
   // normal session so the customer can use the site immediately.
-  if (!data.session) {
-    const { error: confirmError } = await serviceClient().auth.admin.updateUserById(data.user.id, {
+  if (!data.session && admin) {
+    const { error: confirmError } = await admin.auth.admin.updateUserById(data.user.id, {
       email_confirm: true,
     });
     if (confirmError) return { ok: false, message: 'Hisob tasdiqlanmadi. Qayta urinib ko\'ring.' };
@@ -87,11 +89,12 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   // Older accounts may still be waiting for email confirmation. Since this
   // storefront intentionally uses immediate account activation, repair that
   // state once and retry the same login attempt.
-  if (error?.message.toLowerCase().includes('email not confirmed')) {
-    const users = await serviceClient().auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const admin = serviceClient();
+  if (admin && error?.message.toLowerCase().includes('email not confirmed')) {
+    const users = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     const user = users.data.users.find((candidate) => candidate.email?.toLowerCase() === email);
     if (user) {
-      const confirmed = await serviceClient().auth.admin.updateUserById(user.id, { email_confirm: true });
+      const confirmed = await admin.auth.admin.updateUserById(user.id, { email_confirm: true });
       if (!confirmed.error) {
         ({ data, error } = await supabase.auth.signInWithPassword({
           email,
@@ -104,21 +107,23 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   if (error || !data.user) return { ok: false, message: 'Email yoki parol xato' };
 
   // Blocked customers are signed out immediately.
-  const { data: profile } = await serviceClient()
-    .from('profiles')
-    .select('is_blocked')
-    .eq('id', data.user.id)
-    .maybeSingle();
-  if (profile?.is_blocked) {
-    await supabase.auth.signOut();
-    return { ok: false, message: 'Hisobingiz vaqtincha bloklangan' };
+  if (admin) {
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('is_blocked')
+      .eq('id', data.user.id)
+      .maybeSingle();
+    if (profile?.is_blocked) {
+      await supabase.auth.signOut();
+      return { ok: false, message: 'Hisobingiz vaqtincha bloklangan' };
+    }
   }
 
   await audit({ actorId: data.user.id, actorEmail: data.user.email, action: 'auth.sign_in' });
 
   const next = String(formData.get('next') ?? '');
   // Console users always land on the console gate, never on a public page.
-  if (next.startsWith('/__console') && (await isEmailAllowlisted(email))) {
+  if (next.startsWith('/__console') && admin && (await isEmailAllowlisted(email))) {
     redirect('/__console/login');
   }
   redirect(next && next.startsWith('/') ? next : '/');
@@ -172,14 +177,17 @@ export async function verifyPhoneCode(_prev: FormState, formData: FormData): Pro
   });
   if (error || !data.user) return { ok: false, message: 'SMS kodi noto\'g\'ri yoki muddati tugagan.' };
 
-  const { data: profile } = await serviceClient()
-    .from('profiles')
-    .select('is_blocked')
-    .eq('id', data.user.id)
-    .maybeSingle();
-  if (profile?.is_blocked) {
-    await supabase.auth.signOut();
-    return { ok: false, message: 'Hisobingiz vaqtincha bloklangan' };
+  const admin = serviceClient();
+  if (admin) {
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('is_blocked')
+      .eq('id', data.user.id)
+      .maybeSingle();
+    if (profile?.is_blocked) {
+      await supabase.auth.signOut();
+      return { ok: false, message: 'Hisobingiz vaqtincha bloklangan' };
+    }
   }
 
   await audit({ actorId: data.user.id, actorEmail: data.user.email, action: 'auth.sms_sign_in' });

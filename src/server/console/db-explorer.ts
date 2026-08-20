@@ -1,5 +1,5 @@
 import 'server-only';
-import { serviceClient } from '@/lib/supabase/service';
+import { requireServiceClient } from '@/lib/supabase/service';
 import { requireConsole } from '@/lib/security/console';
 
 /**
@@ -64,7 +64,7 @@ export async function readTable(table: BrowsableTable, page = 1, search = ''): P
   const meta = BROWSABLE_TABLES[table];
   const from = (page - 1) * PAGE_SIZE;
 
-  let query = serviceClient()
+  let query = requireServiceClient()
     .from(table)
     .select('*', { count: 'exact' })
     .order(meta.order, { ascending: false })
@@ -109,7 +109,7 @@ export interface DashboardStats {
 
 export async function dashboardStats(): Promise<DashboardStats> {
   await requireConsole();
-  const client = serviceClient();
+  const client = requireServiceClient();
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 

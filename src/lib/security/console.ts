@@ -1,7 +1,7 @@
 import 'server-only';
 import { cookies, headers } from 'next/headers';
 import { authenticator } from 'otplib';
-import { serviceClient } from '../supabase/service';
+import { serviceClient, requireServiceClient } from '../supabase/service';
 import { createClient } from '../supabase/server';
 import { serverEnv } from '../env';
 import { decryptSecret, encryptSecret, generateRecoveryCodes, randomToken, sha256 } from './crypto';
@@ -27,7 +27,17 @@ export interface SecuritySettings {
 }
 
 export async function getSecuritySettings(): Promise<SecuritySettings> {
-  const { data } = await serviceClient().from('settings').select('value').eq('key', 'security').maybeSingle();
+  const client = serviceClient();
+  if (!client) {
+    return {
+      require_mfa: true,
+      ip_allowlist_enabled: false,
+      session_hours: DEFAULT_SESSION_HOURS,
+      max_login_attempts: DEFAULT_MAX_ATTEMPTS,
+      lockout_minutes: DEFAULT_LOCKOUT_MINUTES,
+    };
+  }
+  const { data } = await client.from('settings').select('value').eq('key', 'security').maybeSingle();
   const value = (data?.value ?? {}) as Partial<SecuritySettings>;
   return {
     require_mfa: value.require_mfa ?? true,
@@ -57,7 +67,9 @@ export async function requestMeta() {
 }
 
 export async function isEmailAllowlisted(email: string): Promise<boolean> {
-  const { data } = await serviceClient()
+  const client = serviceClient();
+  if (!client) return false;
+  const { data } = await client
     .from('admin_allowlist')
     .select('email')
     .eq('email', email.toLowerCase())
@@ -69,7 +81,9 @@ export async function isIpAllowed(ip: string | null): Promise<boolean> {
   const settings = await getSecuritySettings();
   if (!settings.ip_allowlist_enabled) return true;
   if (!ip) return false;
-  const { data } = await serviceClient().from('admin_ip_allowlist').select('cidr');
+  const client = serviceClient();
+  if (!client) return false;
+  const { data } = await client.from('admin_ip_allowlist').select('cidr');
   const list = (data ?? []) as { cidr: string }[];
   // Fail closed: an enabled but empty allow-list must not permit everyone.
   if (list.length === 0) return false;
@@ -89,15 +103,19 @@ export function ipInCidr(ip: string, cidr: string): boolean {
 }
 
 export async function recordLoginAttempt(identifier: string, successful: boolean, ip: string | null) {
-  await serviceClient()
+  const client = serviceClient();
+  if (!client) return;
+  await client
     .from('login_attempts')
     .insert({ identifier: identifier.toLowerCase(), ip, scope: 'console', successful });
 }
 
 export async function isLockedOut(identifier: string): Promise<boolean> {
   const settings = await getSecuritySettings();
+  const client = serviceClient();
+  if (!client) return false;
   const since = new Date(Date.now() - settings.lockout_minutes * 60_000).toISOString();
-  const { data } = await serviceClient()
+  const { data } = await client
     .from('login_attempts')
     .select('successful, created_at')
     .eq('identifier', identifier.toLowerCase())
@@ -111,7 +129,9 @@ export async function isLockedOut(identifier: string): Promise<boolean> {
 }
 
 export async function hasAdminRole(userId: string): Promise<boolean> {
-  const { data } = await serviceClient()
+  const client = serviceClient();
+  if (!client) return false;
+  const { data } = await client
     .from('user_roles')
     .select('role')
     .eq('user_id', userId)
@@ -130,7 +150,8 @@ export interface MfaRecord {
 }
 
 export async function getMfa(userId: string): Promise<MfaRecord | null> {
-  const { data } = await serviceClient()
+  const client = requireServiceClient();
+  const { data } = await client
     .from('admin_mfa')
     .select('user_id, secret_encrypted, confirmed_at, last_used_step')
     .eq('user_id', userId)
@@ -151,8 +172,9 @@ export async function enrollMfa(userId: string, email: string) {
   const env = serverEnv();
   const secret = authenticator.generateSecret();
   const { codes, hashed } = generateRecoveryCodes();
+  const client = requireServiceClient();
 
-  await serviceClient()
+  await client
     .from('admin_mfa')
     .upsert(
       {
@@ -187,7 +209,7 @@ export async function verifyTotp(userId: string, token: string): Promise<boolean
     return false;
   }
 
-  await serviceClient()
+  await requireServiceClient()
     .from('admin_mfa')
     .update({ last_used_step: step, confirmed_at: record.confirmed_at ?? new Date().toISOString() })
     .eq('user_id', userId);
@@ -195,7 +217,7 @@ export async function verifyTotp(userId: string, token: string): Promise<boolean
 }
 
 export async function consumeRecoveryCode(userId: string, code: string): Promise<boolean> {
-  const client = serviceClient();
+  const client = requireServiceClient();
   const { data } = await client
     .from('admin_mfa')
     .select('recovery_codes_hashed')
@@ -219,8 +241,9 @@ export async function issueConsoleSession(userId: string) {
   const { ip, userAgent } = await requestMeta();
   const token = randomToken();
   const expiresAt = new Date(Date.now() + settings.session_hours * 3_600_000);
+  const client = requireServiceClient();
 
-  await serviceClient().from('admin_sessions').insert({
+  await client.from('admin_sessions').insert({
     user_id: userId,
     token_hash: sha256(token),
     ip,
@@ -242,10 +265,13 @@ export async function revokeConsoleSession() {
   const store = await cookies();
   const token = store.get(CONSOLE_COOKIE)?.value;
   if (token) {
-    await serviceClient()
-      .from('admin_sessions')
-      .update({ revoked_at: new Date().toISOString() })
-      .eq('token_hash', sha256(token));
+    const client = serviceClient();
+    if (client) {
+      await client
+        .from('admin_sessions')
+        .update({ revoked_at: new Date().toISOString() })
+        .eq('token_hash', sha256(token));
+    }
   }
   // The cookie was written with an explicit path; a path-less delete would emit
   // a clearing directive for `/` and leave the real cookie in place.
@@ -277,7 +303,9 @@ export async function getConsoleIdentity(): Promise<ConsoleIdentity | null> {
 
   if (!(await isEmailAllowlisted(user.email))) return null;
 
-  const { data: roles } = await serviceClient()
+  const client = serviceClient();
+  if (!client) return null;
+  const { data: roles } = await client
     .from('user_roles')
     .select('role')
     .eq('user_id', user.id)
@@ -295,7 +323,7 @@ export async function getConsoleIdentity(): Promise<ConsoleIdentity | null> {
   const store = await cookies();
   const token = store.get(CONSOLE_COOKIE)?.value;
   if (!token) return null;
-  const { data: session } = await serviceClient()
+  const { data: session } = await client
     .from('admin_sessions')
     .select('user_id, expires_at, revoked_at')
     .eq('token_hash', sha256(token))
@@ -332,7 +360,9 @@ export async function audit(input: {
   after?: unknown;
 }) {
   const { ip, userAgent } = await requestMeta();
-  await serviceClient().from('audit_log').insert({
+  const client = serviceClient();
+  if (!client) return;
+  await client.from('audit_log').insert({
     actor_id: input.actorId ?? null,
     actor_email: input.actorEmail ?? null,
     action: input.action,
