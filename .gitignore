@@ -45,3 +45,4 @@ next-env.d.ts
 *-check.mjs
 admin-setup.mjs
 supabase/.branches
+.env
