@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /__console/
+Disallow: /_next/
+Disallow: /api/
+
+Sitemap: https://uzbekistan-strategyhu.vercel.app/sitemap.xml

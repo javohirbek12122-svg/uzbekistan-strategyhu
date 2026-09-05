@@ -325,3 +325,95 @@ export async function markNotificationsRead(): Promise<void> {
     .is('read_at', null);
   revalidatePath('/notifications');
 }
+
+export async function submitUserProduct(_prev: FormState, formData: FormData): Promise<FormState> {
+  const user = await requireUser();
+  const name_uz = String(formData.get('name_uz') || '').trim();
+  const description_uz = String(formData.get('description_uz') || '').trim() || null;
+  const price = Number(formData.get('price') || 0);
+  const weight_gram = Number(formData.get('weight_gram') || 0);
+  const image_url = String(formData.get('image_url') || '').trim() || null;
+  const passport_id = String(formData.get('passport_id') || '').trim() || null;
+  const card_number = String(formData.get('card_number') || '').trim() || null;
+
+  if (!name_uz || price <= 0) {
+    return { ok: false, message: 'Mahsulot nomi va narxini kiriting' };
+  }
+
+  const { error } = await requireServiceClient().from('user_products').insert({
+    user_id: user.id,
+    name_uz,
+    description_uz,
+    price,
+    weight_gram,
+    image_url,
+    passport_id,
+    card_number,
+  });
+
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, message: 'Mahsulot moderatsiyaga yuborildi' };
+}
+
+export async function updateUserSettings(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  const theme = String(formData.get('theme') || 'system');
+  const language = String(formData.get('language') || 'uz');
+  const notifications = String(formData.get('notifications') || 'all');
+
+  const { error } = await requireServiceClient()
+    .from('profiles')
+    .upsert({ id: user.id, theme, language, notifications }, { onConflict: 'id' });
+
+  if (error) {
+    console.error('[updateUserSettings]', error.message);
+    return;
+  }
+  revalidatePath('/settings');
+}
+
+export async function saveP2PCard(_prev: FormState, formData: FormData): Promise<FormState> {
+  const user = await requireUser();
+  const cardNumber = String(formData.get('p2p_card_number') || '').trim();
+
+  if (!cardNumber || cardNumber.length < 4) {
+    return { ok: false, message: 'Karta raqamini kiriting' };
+  }
+
+  const { error } = await requireServiceClient()
+    .from('profiles')
+    .update({ p2p_card_number: cardNumber })
+    .eq('id', user.id);
+
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, message: 'P2P karta saqlandi' };
+}
+
+export async function updateProfile(_prev: FormState, formData: FormData): Promise<FormState> {
+  const user = await requireUser();
+  const surname = String(formData.get('surname') || '').trim();
+  const first_name = String(formData.get('first_name') || '').trim();
+  const patronymic = String(formData.get('patronymic') || '').trim() || null;
+  const phone = String(formData.get('phone') || '').trim();
+  const avatar_url = String(formData.get('avatar_url') || '').trim() || null;
+
+  if (!first_name) {
+    return { ok: false, message: 'Ism kiriting' };
+  }
+
+  const { error } = await requireServiceClient()
+    .from('profiles')
+    .update({
+      id: user.id,
+      surname,
+      first_name,
+      patronymic,
+      phone,
+      avatar_url,
+    })
+    .eq('id', user.id);
+
+  if (error) return { ok: false, message: error.message };
+  revalidatePath('/profile');
+  return { ok: true, message: 'Profil yangilandi' };
+}

@@ -650,6 +650,33 @@ export async function saveSetting(_prev: FormState, formData: FormData): Promise
   return { ok: true, message: 'Sozlama saqlandi' };
 }
 
+export async function updateContactSettings(formData: FormData): Promise<void> {
+  const identity = await requireAdmin();
+  const phone = String(formData.get('phone') || '').trim();
+  const address = String(formData.get('address') || '').trim();
+  const workingHours = String(formData.get('working_hours') || '').trim();
+
+  const value = { phone, address, workingHours };
+
+  const { error } = await requireServiceClient()
+    .from('settings')
+    .upsert({ key: 'contact', value, updated_by: identity.userId, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+
+  if (error) {
+    console.error('[updateContactSettings]', error.message);
+    return;
+  }
+  await audit({
+    actorId: identity.userId,
+    actorEmail: identity.email,
+    action: 'contact.update',
+    entity: 'settings',
+    entityId: 'contact',
+    after: value,
+  });
+  revalidatePath(`${CONSOLE}/contact`);
+}
+
 export async function saveBanner(_prev: FormState, formData: FormData): Promise<FormState> {
   const identity = await requireConsole();
   const title = String(formData.get('title') ?? '').trim();

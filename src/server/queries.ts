@@ -266,6 +266,26 @@ export async function getMyNotifications() {
   return data ?? [];
 }
 
+export async function getTodayOrders() {
+  if (!isSupabaseConfigured) return [];
+  const supabase = await createClient();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('id, address_snapshot, order_items(name_snapshot, quantity, weight_gram), payment_provider, created_at')
+    .gte('created_at', today.toISOString())
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('[queries:today-orders]', error.message);
+    return [];
+  }
+
+  return data ?? [];
+}
+
 /** Rendered in the shared layout, so it must never cost a query per request. */
 export const getStoreSettings = cachedRead(
   'store-settings',
