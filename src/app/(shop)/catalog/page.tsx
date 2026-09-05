@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { ProductGrid } from '@/components/shop/product-card';
 import { CATALOG_PAGE_SIZE, getCatalog, getCategories } from '@/server/queries';
 import { cn } from '@/lib/format';
+import type { Category, Product } from '@/lib/types';
 
 export const metadata: Metadata = { title: 'Katalog' };
 export const dynamic = 'force-dynamic';
@@ -31,8 +32,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const page = Number(search.page ?? '1') || 1;
   const sort = SORTS.find((s) => s.key === search.sort)?.key ?? 'new';
 
-  let categories: unknown[] = [];
-  let products: unknown[] = [];
+  let categories: Category[] = [];
+  let products: Product[] = [];
   let total = 0;
 
   try {

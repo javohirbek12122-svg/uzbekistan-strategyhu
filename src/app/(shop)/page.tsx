@@ -8,15 +8,16 @@ import { money } from '@/lib/format';
 import { formatEta } from '@/lib/delivery';
 import { SetupNotice } from '@/components/site/setup-notice';
 import { isSupabaseConfigured } from '@/lib/env';
+import type { Banner, Category, Product, DeliveryZone } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  let banners: unknown[] = [];
-  let categories: unknown[] = [];
-  let featured: unknown[] = [];
-  let fresh: unknown[] = [];
-  let zones: unknown[] = [];
+  let banners: Banner[] = [];
+  let categories: Category[] = [];
+  let featured: Product[] = [];
+  let fresh: Product[] = [];
+  let zones: DeliveryZone[] = [];
 
   try {
     [banners, categories, featured, fresh, zones] = await Promise.all([
