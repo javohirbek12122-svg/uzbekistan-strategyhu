@@ -10,8 +10,8 @@ declare global {
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
   resultIndex: number;
-  interpretation: any;
-  emma: any;
+  interpretation: unknown;
+  emma: unknown;
 }
 
 interface SpeechRecognitionResultList {
@@ -46,13 +46,13 @@ interface SpeechRecognition extends EventTarget {
   interimResults: boolean;
   lang: string;
   maxAlternatives: number;
-  onaudiostart: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onaudioend: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onend: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
-  onnomatch: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-  onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onaudiostart: ((this: SpeechRecognition, ev: Event) => unknown) | null;
+  onaudioend: ((this: SpeechRecognition, ev: Event) => unknown) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => unknown) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => unknown) | null;
+  onnomatch: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => unknown) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => unknown) | null;
+  onstart: ((this: SpeechRecognition, ev: Event) => unknown) | null;
   start(): void;
   stop(): void;
   abort(): void;
@@ -60,25 +60,7 @@ interface SpeechRecognition extends EventTarget {
   removeEventListener(type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | EventListenerOptions): void;
 }
 
-declare var SpeechRecognition: SpeechRecognitionStatic;
-
-interface BluetoothLEScanFilter {
-  namePrefix?: string;
-  name?: string;
-  services?: string[];
-}
-
-interface BluetoothRequestDeviceFilter {
-  services?: string[];
-  name?: string;
-  namePrefix?: string;
-}
-
-interface RequestDeviceOptions {
-  filters?: BluetoothRequestDeviceFilter[];
-  optionalServices?: string[];
-  acceptAllDevices?: boolean;
-}
+declare const SpeechRecognition: SpeechRecognitionStatic;
 
 interface BluetoothCharacteristicProperties {
   broadcast?: boolean;
@@ -102,7 +84,7 @@ interface BluetoothRemoteGATTCharacteristic extends EventTarget {
   writeValue: (value: BufferSource) => Promise<void>;
   startNotifications: () => Promise<BluetoothRemoteGATTCharacteristic>;
   stopNotifications: () => Promise<BluetoothRemoteGATTCharacteristic>;
-  addEventListener(type: 'characteristicvaluechanged', listener: (this: BluetoothRemoteGATTCharacteristic, ev: Event) => any): void;
+  addEventListener(type: 'characteristicvaluechanged', listener: (this: BluetoothRemoteGATTCharacteristic, ev: Event) => unknown): void;
 }
 
 interface BluetoothRemoteGATTDescriptor {
@@ -138,15 +120,33 @@ interface BluetoothDevice extends EventTarget {
   watchAdvertisements?: () => Promise<void>;
   unwatchAdvertisements?: () => void;
   referringDevice?: BluetoothDevice;
-  addEventListener(type: 'advertisementreceived', listener: (this: BluetoothDevice, ev: Event) => any): void;
+  addEventListener(type: 'advertisementreceived', listener: (this: BluetoothDevice, ev: Event) => unknown): void;
 }
 
 interface Bluetooth extends EventTarget {
   getAvailability: () => Promise<boolean>;
-  onavailabilitychanged: ((this: Bluetooth, ev: Event) => any) | null;
+  onavailabilitychanged: ((this: Bluetooth, ev: Event) => unknown) | null;
   requestDevice: (options: RequestDeviceOptions) => Promise<BluetoothDevice>;
 }
 
-interface Navigator {
-  bluetooth?: Bluetooth;
+interface RequestDeviceOptions {
+  filters?: BluetoothRequestDeviceFilter[];
+  optionalServices?: string[];
+  acceptAllDevices?: boolean;
 }
+
+interface BluetoothRequestDeviceFilter {
+  services?: string[];
+  name?: string;
+  namePrefix?: string;
+}
+
+interface BluetoothLEScanFilter {
+  namePrefix?: string;
+  name?: string;
+  services?: string[];
+}
+
+declare const navigator: {
+  bluetooth?: Bluetooth;
+};

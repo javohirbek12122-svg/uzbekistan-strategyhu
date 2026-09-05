@@ -12,7 +12,7 @@ const STEPS = [
 ];
 
 const SAMPLE_ORDERS = [
-  { id: 'PM-10234', status: 'shipped', eta: '18:30', zone: 'So\'qoq' },
+  { id: 'PM-10234', status: 'shipped', eta: '18:30', zone: 'So&apos;qoq' },
   { id: 'PM-10235', status: 'packed', eta: '19:00', zone: 'Kumushkon' },
   { id: 'PM-10236', status: 'received', eta: '20:15', zone: 'Hisarak' },
 ];

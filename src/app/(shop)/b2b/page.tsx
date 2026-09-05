@@ -21,16 +21,16 @@ export default function B2BPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-extrabold">B2B Portal — Catering & Choyxona</h1>
-        <p className="text-sm text-ink-500">To'y, marosim va korporativ tadbirlar uchun bulk buyurtma</p>
+        <h1 className="text-2xl font-extrabold">B2B Portal — Catering &amp; Choyxona</h1>
+        <p className="text-sm text-ink-500">To&apos;y, marosim va korporativ tadbirlar uchun bulk buyurtma</p>
       </header>
 
       <section className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         {[
           { icon: Users, label: 'Mehmonlar', value: people },
           { icon: CalendarClock, label: 'Sana', value: eventDate || '—' },
-          { icon: Wallet, label: 'Umumiy', value: `${totalPrice.toLocaleString()} so'm` },
-          { icon: Briefcase, label: 'Oldindan (50%)', value: `${upfront.toLocaleString()} so'm` },
+          { icon: Wallet, label: 'Umumiy', value: `${totalPrice.toLocaleString()} so&apos;m` },
+          { icon: Briefcase, label: 'Oldindan (50%)', value: `${upfront.toLocaleString()} so&apos;m` },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -71,17 +71,17 @@ export default function B2BPage() {
       <section className="rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 to-amber-50 p-5">
         <h2 className="text-lg font-bold text-brand-900">Uzum Digital Nasiya</h2>
         <p className="mt-1 text-sm text-brand-800">
-          Tadbir tugaganidan keyin 3 kun ichida qolgan 50% ni to'lang.
+          Tadbir tugaganidan keyin 3 kun ichida qolgan 50% ni to&apos;lang.
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl bg-white/80 p-4">
-            <p className="text-xs text-ink-500">Oldindan to'lov (50%)</p>
-            <p className="text-2xl font-extrabold text-ink-900">{upfront.toLocaleString()} so'm</p>
+            <p className="text-xs text-ink-500">Oldindan to&apos;lov (50%)</p>
+            <p className="text-2xl font-extrabold text-ink-900">{upfront.toLocaleString()} so&apos;m</p>
             <p className="text-xs text-ink-500">Tadbir boshlanishida</p>
           </div>
           <div className="rounded-xl bg-white/80 p-4">
-            <p className="text-xs text-ink-500">Keyingi to'lov (50%)</p>
-            <p className="text-2xl font-extrabold text-ink-900">{postpay.toLocaleString()} so'm</p>
+            <p className="text-xs text-ink-500">Keyingi to&apos;lov (50%)</p>
+            <p className="text-2xl font-extrabold text-ink-900">{postpay.toLocaleString()} so&apos;m</p>
             <p className="text-xs text-ink-500">3 kun ichida</p>
           </div>
         </div>

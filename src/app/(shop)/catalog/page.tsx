@@ -31,8 +31,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const page = Number(search.page ?? '1') || 1;
   const sort = SORTS.find((s) => s.key === search.sort)?.key ?? 'new';
 
-  let categories: any[] = [];
-  let products: any[] = [];
+  let categories: unknown[] = [];
+  let products: unknown[] = [];
   let total = 0;
 
   try {

@@ -37,7 +37,7 @@ export function BottomNav() {
     >
       {!isOnline && (
         <div className="bg-amber-500 px-2 py-0.5 text-center text-[10px] font-medium text-white">
-          ⚠ Oflayn rejim — o'zgarishlar saqlanmoqda
+          ⚠ Oflayn rejim — o&apos;zgarishlar saqlanmoqda
         </div>
       )}
       <ul className="mx-auto flex max-w-md items-stretch justify-between px-1 py-1.5">

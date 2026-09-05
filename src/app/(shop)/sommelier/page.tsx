@@ -12,29 +12,45 @@ const OSH_RATIO = {
   oil: 0.03,
 };
 
+type RecognitionResult = { transcript: string; confidence: number };
+type RecognitionEventLike = { results: Array<Array<RecognitionResult>> };
+type RecognitionInstance = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((e: RecognitionEventLike) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+};
+
 export default function SommelierPage() {
   const [mounted, setMounted] = useState(false);
   const [guests, setGuests] = useState(50);
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [eta, setEta] = useState('Bugun 15:00 gacha: So\'qoq va Kumushkonga soat 18:30 da yetkaziladi');
-  const recognitionRef = useRef<any>(null);
+  const eta = 'Bugun 15:00 gacha: So&apos;qoq va Kumushkonga soat 18:30 da yetkaziladi';
+  const recognitionRef = useRef<RecognitionInstance | null>(null);
 
   useEffect(() => {
     setMounted(true);
     if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
-      const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      recognitionRef.current = new SR();
-      recognitionRef.current.lang = 'uz-UZ';
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.onresult = (e: any) => {
-        const text = e.results[0][0].transcript;
-        setTranscript(text);
-        setListening(false);
-      };
-      recognitionRef.current.onerror = () => setListening(false);
-      recognitionRef.current.onend = () => setListening(false);
+      const SR = (window as unknown as { SpeechRecognition?: new () => RecognitionInstance; webkitSpeechRecognition?: new () => RecognitionInstance }).SpeechRecognition
+        || (window as unknown as { webkitSpeechRecognition?: new () => RecognitionInstance }).webkitSpeechRecognition;
+      if (SR) {
+        recognitionRef.current = new SR();
+        recognitionRef.current.lang = 'uz-UZ';
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = false;
+        recognitionRef.current.onresult = (e: RecognitionEventLike) => {
+          const text = e.results[0]?.[0]?.transcript ?? '';
+          setTranscript(text);
+          setListening(false);
+        };
+        recognitionRef.current.onerror = () => setListening(false);
+        recognitionRef.current.onend = () => setListening(false);
+      }
     }
   }, []);
 
@@ -51,7 +67,7 @@ export default function SommelierPage() {
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-      setTranscript('Brauzeringiz ovozli qidiruvni qo\'llab-quvvatlamaydi. Iltimos, matn bilan yozing.');
+      setTranscript('Brauzeringiz ovozli qidiruvni qo&apos;llab-quvvatlamaydi. Iltimos, matn bilan yozing.');
       return;
     }
     if (listening) {
@@ -71,7 +87,7 @@ export default function SommelierPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-extrabold">AI Sommelier & Osh Kalkulyatori</h1>
+        <h1 className="text-2xl font-extrabold">AI Sommelier &amp; Osh Kalkulyatori</h1>
         <p className="text-sm text-ink-500">Mehmonlar sonini kiriting — kerakli masalliqlar avtomatik hisoblanadi</p>
       </header>
 
@@ -97,7 +113,7 @@ export default function SommelierPage() {
               className="input w-24 text-center"
             />
           </div>
-          <p className="mt-2 text-xs text-ink-500">10–500 kishi uchun mo'ljallangan</p>
+          <p className="mt-2 text-xs text-ink-500">10–500 kishi uchun mo&apos;ljallangan</p>
         </div>
 
         <div className="rounded-2xl border border-brand-200 bg-brand-50 p-5">
@@ -133,7 +149,7 @@ export default function SommelierPage() {
           ))}
         </ul>
         <Link href="/catalog?q=guruch" className="btn-primary mt-4 inline-flex">
-          Masalliqlarni savatga qo'shish
+          Masalliqlarni savatga qo&apos;shish
         </Link>
       </section>
 
@@ -149,7 +165,7 @@ export default function SommelierPage() {
             {listening ? 'Tinglash…' : 'Ovozli qidiruv'}
           </button>
           {transcript && (
-            <p className="flex-1 text-sm text-ink-700">"{transcript}"</p>
+            <p className="flex-1 text-sm text-ink-700">&ldquo;{transcript}&rdquo;</p>
           )}
         </div>
       </section>

@@ -12,11 +12,11 @@ import { isSupabaseConfigured } from '@/lib/env';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  let banners: any[] = [];
-  let categories: any[] = [];
-  let featured: any[] = [];
-  let fresh: any[] = [];
-  let zones: any[] = [];
+  let banners: unknown[] = [];
+  let categories: unknown[] = [];
+  let featured: unknown[] = [];
+  let fresh: unknown[] = [];
+  let zones: unknown[] = [];
 
   try {
     [banners, categories, featured, fresh, zones] = await Promise.all([

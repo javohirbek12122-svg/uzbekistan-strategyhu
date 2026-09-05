@@ -17,8 +17,8 @@ export default function WalletPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-extrabold">Hamyon & Keshbek</h1>
-        <p className="text-sm text-ink-500">Avtomatik 2% keshbek va Parkent Coin yig'ish</p>
+        <h1 className="text-2xl font-extrabold">Hamyon &amp; Keshbek</h1>
+        <p className="text-sm text-ink-500">Avtomatik 2% keshbek va Parkent Coin yig&apos;ish</p>
       </header>
 
       <section className="rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 p-6 text-white shadow-lg">
@@ -53,22 +53,22 @@ export default function WalletPage() {
           <ul className="mt-3 space-y-2 text-sm">
             <li className="flex items-center justify-between">
               <span className="text-ink-500">Buyurtma #10230</span>
-              <span className="font-semibold text-emerald-600">+2 500 so'm</span>
+              <span className="font-semibold text-emerald-600">+2 500 so&apos;m</span>
             </li>
             <li className="flex items-center justify-between">
               <span className="text-ink-500">Buyurtma #10228</span>
-              <span className="font-semibold text-emerald-600">+1 800 so'm</span>
+              <span className="font-semibold text-emerald-600">+1 800 so&apos;m</span>
             </li>
             <li className="flex items-center justify-between">
               <span className="text-ink-500">Buyurtma #10225</span>
-              <span className="font-semibold text-emerald-600">+3 200 so'm</span>
+              <span className="font-semibold text-emerald-600">+3 200 so&apos;m</span>
             </li>
           </ul>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-sm font-bold">1-click to'lov</h2>
-          <p className="mt-1 text-xs text-ink-500">Click / Payme / Uzum orqali tezkor to'lov</p>
+          <h2 className="text-sm font-bold">1-click to&apos;lov</h2>
+          <p className="mt-1 text-xs text-ink-500">Click / Payme / Uzum orqali tezkor to&apos;lov</p>
           <div className="mt-3 grid gap-2">
             <button className="btn-secondary w-full">💳 Click orqali</button>
             <button className="btn-secondary w-full">💳 Payme orqali</button>

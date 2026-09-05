@@ -5,9 +5,9 @@ import { getSessionUser } from '@/lib/supabase/server';
 import { CategoryBar } from './category-bar';
 
 export async function Header() {
-  let categories: any[] = [];
+  let categories: unknown[] = [];
   let cart: { count: number } = { count: 0 };
-  let user: any = null;
+  let user: unknown = null;
   let settings = { name: 'Parkent E-Mart', phone: '+998 90 000 00 00', telegram: '', address: '' };
   let unread = 0;
 
@@ -24,7 +24,7 @@ export async function Header() {
     settings = s;
     if (user) {
       const notifications = await getMyNotifications();
-      unread = notifications.filter((n: any) => !n.read_at).length;
+      unread = notifications.filter((n: { read_at: string | null }) => !n.read_at).length;
     }
   } catch (err) {
     console.error('[Header]', err);

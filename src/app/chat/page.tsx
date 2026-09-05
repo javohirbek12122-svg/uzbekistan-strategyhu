@@ -120,8 +120,8 @@ export default function ChatPage() {
             className="hidden"
             onChange={onFileChange}
           />
-          <button type="button" onClick={() => fileRef.current?.click()} className="btn-secondary" disabled={uploading}>
-            <Image className="h-4 w-4" />
+          <button type="button" onClick={() => fileRef.current?.click()} className="btn-secondary" disabled={uploading} aria-label="Rasm yuklash">
+            <ImageIcon className="h-4 w-4" />
           </button>
           <input
             value={text}
