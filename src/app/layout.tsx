@@ -27,6 +27,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <link rel="icon" href="/favicon.ico" />
         <meta name="theme-color" content="#12a065" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Parkent E-Mart" />
       </head>
       <body className="font-sans bg-slate-50 min-h-screen">
         <ThemeProvider>{children}</ThemeProvider>
