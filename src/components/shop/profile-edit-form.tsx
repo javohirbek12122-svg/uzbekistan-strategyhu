@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { useActionState } from 'react';
 import { updateProfile } from '@/server/actions/shop';
 import { initialFormState } from '@/lib/validation';
@@ -63,7 +64,7 @@ export function ProfileEditForm({ defaultValues }: { defaultValues: { surname: s
           onChange={onFileChange}
         />
         {preview && (
-          <img src={preview} alt="Preview" className="mt-2 h-24 w-24 rounded-full object-cover" />
+          <Image src={preview} alt="Preview" width={96} height={96} className="mt-2 h-24 w-24 rounded-full object-cover" unoptimized />
         )}
         {uploading && <p className="mt-1 text-xs text-ink-500">Yuklanmoqda…</p>}
       </div>

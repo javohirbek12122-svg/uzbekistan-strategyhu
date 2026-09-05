@@ -20,8 +20,6 @@ export function CheckoutPageClient({
   cardNumber: string;
 }) {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [orderNumber, setOrderNumber] = useState('');
-  const [provider, setProvider] = useState<'cash' | 'p2p_telegram'>('p2p_telegram');
 
   return (
     <div className="space-y-6">

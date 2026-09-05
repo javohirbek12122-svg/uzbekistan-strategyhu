@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Send, Image } from 'lucide-react';
+import Image from 'next/image';
+import { Send, Image as ImageIcon } from 'lucide-react';
 
 type Message = {
   id: string;
@@ -94,7 +95,7 @@ export default function ChatPage() {
                   <span className="text-xs text-ink-500">{new Date(msg.created_at).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
                 {msg.image_url && (
-                  <img src={msg.image_url} alt="Chat image" className="mt-1 h-48 w-48 rounded-lg object-cover" />
+                  <Image src={msg.image_url} alt="Chat image" width={192} height={192} className="mt-1 h-48 w-48 rounded-lg object-cover" unoptimized />
                 )}
                 <p className="text-sm text-ink-800">{msg.message}</p>
               </li>
@@ -106,7 +107,7 @@ export default function ChatPage() {
       <form onSubmit={send} className="mt-3 flex flex-col gap-2">
         {imageUrl && (
           <div className="flex items-center gap-2">
-            <img src={imageUrl} alt="Preview" className="h-16 w-16 rounded-lg object-cover" />
+            <Image src={imageUrl} alt="Preview" width={64} height={64} className="h-16 w-16 rounded-lg object-cover" unoptimized />
             <button type="button" onClick={() => setImageUrl('')} className="text-xs text-red-600">O&apos;chirish</button>
           </div>
         )}

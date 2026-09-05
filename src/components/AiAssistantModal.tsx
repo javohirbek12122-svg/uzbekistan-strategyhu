@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, ShoppingCart, Loader2, Headphones } from 'lucide-react';
+import { X, Send, ShoppingCart, Loader2, Headphones } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const QUICK_PROMPTS = [

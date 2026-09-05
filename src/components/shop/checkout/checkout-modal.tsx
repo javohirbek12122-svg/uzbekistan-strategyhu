@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { X, Copy, Check, Upload, Clock, CheckCircle, XCircle, Banknote } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -234,7 +235,7 @@ export function CheckoutModal({ open, onClose, orderNumber, totalAmount, cardNum
                           className="absolute inset-0 cursor-pointer opacity-0"
                         />
                         {receiptPreview ? (
-                          <img src={receiptPreview} alt="Chek" className="mx-auto max-h-40 rounded-lg" />
+                          <Image src={receiptPreview} alt="Chek" width={160} height={160} className="mx-auto max-h-40 rounded-lg" unoptimized />
                         ) : (
                           <>
                             <Upload className="mx-auto mb-2 h-8 w-8 text-slate-400" />

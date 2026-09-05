@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MessageSquare, Trash2 } from 'lucide-react';
+import Image from 'next/image';
+import { Trash2 } from 'lucide-react';
 
 type ChatMessage = {
   id: string;
@@ -59,7 +60,7 @@ export default function AdminChatPage() {
                   <span className="text-xs text-ink-500">{new Date(msg.created_at).toLocaleString('uz-UZ')}</span>
                 </div>
                 {msg.image_url && (
-                  <img src={msg.image_url} alt="Chat image" className="mt-2 h-32 w-32 rounded-lg object-cover" />
+                  <Image src={msg.image_url} alt="Chat image" width={128} height={128} className="mt-2 h-32 w-32 rounded-lg object-cover" unoptimized />
                 )}
                 <p className="mt-1 text-sm text-ink-800">{msg.message}</p>
               </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { SubmitButton } from '@/components/ui/submit-button';
 import type { Product } from '@/lib/types';
 
@@ -73,7 +74,7 @@ export function ProductEditForm({ productId, defaultValues }: { productId: strin
           onChange={onFileChange}
         />
         {preview && (
-          <img src={preview} alt="Preview" className="mt-2 h-40 w-40 rounded-lg object-cover" />
+          <Image src={preview} alt="Preview" width={160} height={160} className="mt-2 h-40 w-40 rounded-lg object-cover" unoptimized />
         )}
         {uploading && <p className="mt-1 text-xs text-ink-500">Yuklanmoqda…</p>}
       </div>
