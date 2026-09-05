@@ -12,13 +12,23 @@ import { isSupabaseConfigured } from '@/lib/env';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [banners, categories, featured, fresh, zones] = await Promise.all([
-    getBanners(),
-    getCategories(),
-    getFeaturedProducts(10),
-    getNewProducts(10),
-    getZones(),
-  ]);
+  let banners: any[] = [];
+  let categories: any[] = [];
+  let featured: any[] = [];
+  let fresh: any[] = [];
+  let zones: any[] = [];
+
+  try {
+    [banners, categories, featured, fresh, zones] = await Promise.all([
+      getBanners(),
+      getCategories(),
+      getFeaturedProducts(10),
+      getNewProducts(10),
+      getZones(),
+    ]);
+  } catch (err) {
+    console.error('[HomePage]', err);
+  }
 
   return (
     <div className="space-y-8">

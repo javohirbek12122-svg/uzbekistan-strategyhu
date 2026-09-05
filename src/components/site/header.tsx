@@ -5,14 +5,30 @@ import { getSessionUser } from '@/lib/supabase/server';
 import { CategoryBar } from './category-bar';
 
 export async function Header() {
-  const [categories, cart, user, settings] = await Promise.all([
-    getCategories(),
-    getCart(),
-    getSessionUser(),
-    getStoreSettings(),
-  ]);
-  const notifications = user ? await getMyNotifications() : [];
-  const unread = notifications.filter((n) => !n.read_at).length;
+  let categories: any[] = [];
+  let cart: { count: number } = { count: 0 };
+  let user: any = null;
+  let settings = { name: 'Parkent E-Mart', phone: '+998 90 000 00 00', telegram: '', address: '' };
+  let unread = 0;
+
+  try {
+    const [c, c2, u, s] = await Promise.all([
+      getCategories(),
+      getCart(),
+      getSessionUser(),
+      getStoreSettings(),
+    ]);
+    categories = c;
+    cart = c2;
+    user = u;
+    settings = s;
+    if (user) {
+      const notifications = await getMyNotifications();
+      unread = notifications.filter((n: any) => !n.read_at).length;
+    }
+  } catch (err) {
+    console.error('[Header]', err);
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">

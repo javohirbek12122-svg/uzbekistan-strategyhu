@@ -31,17 +31,28 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const page = Number(search.page ?? '1') || 1;
   const sort = SORTS.find((s) => s.key === search.sort)?.key ?? 'new';
 
-  const [categories, { products, total }] = await Promise.all([
-    getCategories(),
-    getCatalog({
-      category: search.category,
-      q: search.q,
-      sort,
-      min: search.min ? Number(search.min) : undefined,
-      max: search.max ? Number(search.max) : undefined,
-      page,
-    }),
-  ]);
+  let categories: any[] = [];
+  let products: any[] = [];
+  let total = 0;
+
+  try {
+    const [c, r] = await Promise.all([
+      getCategories(),
+      getCatalog({
+        category: search.category,
+        q: search.q,
+        sort,
+        min: search.min ? Number(search.min) : undefined,
+        max: search.max ? Number(search.max) : undefined,
+        page,
+      }),
+    ]);
+    categories = c;
+    products = r.products;
+    total = r.total;
+  } catch (err) {
+    console.error('[CatalogPage]', err);
+  }
 
   const pages = Math.max(1, Math.ceil(total / CATALOG_PAGE_SIZE));
 

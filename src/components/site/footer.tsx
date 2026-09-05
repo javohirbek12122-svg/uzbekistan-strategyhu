@@ -3,7 +3,12 @@ import { Phone, Send, Store } from 'lucide-react';
 import { getStoreSettings } from '@/server/queries';
 
 export async function Footer() {
-  const settings = await getStoreSettings();
+  let settings = { name: 'Parkent E-Mart', phone: '+998 90 000 00 00', telegram: 'https://t.me/parkent_emart', address: 'Parkent tumani, Toshkent viloyati' };
+  try {
+    settings = await getStoreSettings();
+  } catch (err) {
+    console.error('[Footer]', err);
+  }
 
   return (
     <footer className="mt-10 border-t border-slate-200 bg-white">
