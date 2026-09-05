@@ -38,7 +38,18 @@ const CATALOG_TTL_SECONDS = 60;
  * revalidates `CATALOG_TAG` whenever it changes catalog data.
  */
 function cachedRead<A extends unknown[], R>(key: string, fn: (...args: A) => Promise<R>) {
-  return unstable_cache(fn, ['catalog', key], { revalidate: CATALOG_TTL_SECONDS, tags: [CATALOG_TAG] });
+  return unstable_cache(
+    async (...args: A) => {
+      try {
+        return await fn(...args);
+      } catch (err) {
+        console.error(`[cachedRead:${key}]`, err);
+        return null as unknown as R;
+      }
+    },
+    ['catalog', key],
+    { revalidate: CATALOG_TTL_SECONDS, tags: [CATALOG_TAG] },
+  );
 }
 
 export const getCategories = cachedRead('categories', async (): Promise<Category[]> => {
@@ -174,26 +185,31 @@ export const getZones = cachedRead('zones', async (): Promise<DeliveryZone[]> =>
 });
 
 export async function getCart() {
-  if (!isSupabaseConfigured) return { items: [], itemsTotal: 0, weightGram: 0, count: 0 };
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { items: [], itemsTotal: 0, weightGram: 0, count: 0 };
+  try {
+    if (!isSupabaseConfigured) return { items: [], itemsTotal: 0, weightGram: 0, count: 0 };
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { items: [], itemsTotal: 0, weightGram: 0, count: 0 };
 
-  const data = pick(
-    'cart',
-    await supabase
-      .from('cart_items')
-      .select(`id, cart_id, product_id, quantity, products(${PRODUCT_SELECT})`)
-      .order('created_at', { ascending: true }),
-  );
+    const data = pick(
+      'cart',
+      await supabase
+        .from('cart_items')
+        .select(`id, cart_id, product_id, quantity, products(${PRODUCT_SELECT})`)
+        .order('created_at', { ascending: true }),
+    );
 
-  const items = (data ?? []) as unknown as { id: string; product_id: string; quantity: number; products: Product }[];
-  const itemsTotal = items.reduce((sum, item) => sum + (item.products?.price ?? 0) * item.quantity, 0);
-  const weightGram = items.reduce((sum, item) => sum + (item.products?.weight_gram ?? 0) * item.quantity, 0);
-  const count = items.reduce((sum, item) => sum + item.quantity, 0);
-  return { items, itemsTotal, weightGram, count };
+    const items = (data ?? []) as unknown as { id: string; product_id: string; quantity: number; products: Product }[];
+    const itemsTotal = items.reduce((sum, item) => sum + (item.products?.price ?? 0) * item.quantity, 0);
+    const weightGram = items.reduce((sum, item) => sum + (item.products?.weight_gram ?? 0) * item.quantity, 0);
+    const count = items.reduce((sum, item) => sum + item.quantity, 0);
+    return { items, itemsTotal, weightGram, count };
+  } catch (err) {
+    console.error('[getCart]', err);
+    return { items: [], itemsTotal: 0, weightGram: 0, count: 0 };
+  }
 }
 
 export async function getAddresses(): Promise<Address[]> {
