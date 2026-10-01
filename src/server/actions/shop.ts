@@ -144,6 +144,14 @@ export async function saveAddress(_prev: FormState, formData: FormData): Promise
 
 export async function placeOrder(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
+
+  const controlResult = await requireServiceClient().from('settings').select('value').eq('key', 'store_control').maybeSingle();
+  const storeControl = (controlResult.data?.value ?? {}) as Record<string, unknown>;
+  if (storeControl.maintenance_mode === true) return { ok: false, message: 'Do‘kon texnik xizmat rejimida.' };
+  if (storeControl.checkout_enabled === false || storeControl.new_orders_enabled === false) {
+    return { ok: false, message: 'Hozircha yangi buyurtmalar qabul qilinmaydi.' };
+  }
+  if (storeControl.delivery_enabled === false) return { ok: false, message: 'Yetkazib berish vaqtincha o‘chirilgan.' };
   const parsed = checkoutSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return zodToFormState(parsed.error);
 
