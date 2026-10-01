@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { isSupabaseConfigured } from '@/lib/env';
+import { isSupabaseConfigured, publicEnv } from '@/lib/env';
 
 const CONSOLE_PREFIX = '/__console';
 
@@ -16,8 +16,8 @@ export async function middleware(request: NextRequest) {
   if (!isSupabaseConfigured) return response;
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+    publicEnv.supabaseUrl,
+    publicEnv.supabaseAnonKey,
     {
       cookies: {
         getAll() {
