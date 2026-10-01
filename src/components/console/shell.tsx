@@ -91,7 +91,7 @@ export function ConsoleShell({
   identity: ConsoleIdentity;
   children: React.ReactNode;
 }) {
-  const navItems: Array<{ href: string; label: string }> = GROUPS.reduce((items, group) => {
+  const navItems = GROUPS.reduce<Array<{ href: string; label: string }>>((items, group) => {
     group.items.forEach((item) => items.push({ href: item.href, label: item.label }));
     return items;
   }, []);
