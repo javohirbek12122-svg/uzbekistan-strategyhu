@@ -2,6 +2,7 @@ import { consoleSecurity } from '@/server/console/queries';
 import { getSecuritySettings } from '@/lib/security/console';
 import { removeAllowlistEmail, removeIpAllowlist, revokeAdminSession } from '@/server/actions/console';
 import { AllowlistForm, IpAllowlistForm } from '@/components/console/security-forms';
+import { MfaEnrolment } from '@/components/console/mfa-enrolment';
 import { dateTime } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -33,6 +34,7 @@ export default async function ConsoleSecurityPage() {
       <p className="text-xs text-ink-500">
         Bu qiymatlar <code>settings.security</code> kalitida saqlanadi — Sozlamalar bo&apos;limida o&apos;zgartiriladi.
       </p>
+      <MfaEnrolment />
 
       <div className="grid gap-5 lg:grid-cols-2">
         <section className="card space-y-3 p-4">
