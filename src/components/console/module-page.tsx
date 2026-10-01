@@ -63,6 +63,54 @@ export async function ConsoleModulePage({ module }: { module: ConsoleModule }) {
         {stats.map(([label, value]) => <div key={label} className="card p-4"><p className="text-xs text-ink-500">{label}</p><p className="mt-1 text-xl font-black">{value}</p></div>)}
       </div>
 
+
+      {module === 'inventory' && (
+        <section className="card overflow-x-auto">
+          <div className="border-b border-slate-100 px-4 py-3">
+            <h2 className="font-bold">Past zaxira — real ro‘yxat</h2>
+            <p className="text-xs text-ink-500">AI va operatsion nazorat uchun muhim SKUlar</p>
+          </div>
+          <table className="table-base">
+            <thead><tr><th>Mahsulot</th><th>Zaxira</th><th>Sotilgan</th></tr></thead>
+            <tbody>
+              {data.lowStockProducts.map((row) => <tr key={row.id}><td>{row.name_uz}</td><td className={row.stock === 0 ? 'font-bold text-red-600' : 'font-semibold text-amber-600'}>{row.stock}</td><td>{row.sold_count}</td></tr>)}
+            </tbody>
+          </table>
+          {data.lowStockProducts.length === 0 && <p className="p-5 text-sm text-ink-500">Past zaxiradagi mahsulot yo‘q.</p>}
+        </section>
+      )}
+
+      {module === 'customers' && (
+        <section className="card overflow-x-auto">
+          <div className="border-b border-slate-100 px-4 py-3"><h2 className="font-bold">Yangi mijozlar</h2></div>
+          <table className="table-base">
+            <thead><tr><th>Ism</th><th>Email</th><th>Sana</th></tr></thead>
+            <tbody>{data.recentCustomers.map((row) => <tr key={row.id}><td>{row.full_name ?? '—'}</td><td>{row.email ?? '—'}</td><td className="text-xs text-ink-500">{new Date(row.created_at).toLocaleDateString('uz-UZ')}</td></tr>)}</tbody>
+          </table>
+        </section>
+      )}
+
+      {module === 'finance' && (
+        <section className="card overflow-x-auto">
+          <div className="border-b border-slate-100 px-4 py-3"><h2 className="font-bold">Failed payment queue</h2><p className="text-xs text-ink-500">Oxirgi 10 ta muvaffaqiyatsiz to‘lov</p></div>
+          <table className="table-base">
+            <thead><tr><th>Provayder</th><th>Summa</th><th>Transaction</th><th>Sana</th></tr></thead>
+            <tbody>{data.failedPaymentRows.map((row) => <tr key={row.id}><td className="uppercase">{row.provider}</td><td>{money(Number(row.amount))}</td><td className="max-w-[220px] truncate">{row.provider_transaction_id ?? '—'}</td><td className="text-xs text-ink-500">{new Date(row.created_at).toLocaleString('uz-UZ')}</td></tr>)}</tbody>
+          </table>
+          {data.failedPaymentRows.length === 0 && <p className="p-5 text-sm text-ink-500">Failed payment yo‘q.</p>}
+        </section>
+      )}
+
+      {module === 'couriers' && (
+        <section className="card overflow-x-auto">
+          <div className="border-b border-slate-100 px-4 py-3"><h2 className="font-bold">Shipment board</h2><p className="text-xs text-ink-500">Faol yetkazishlar va kuryer taqsimoti</p></div>
+          <table className="table-base">
+            <thead><tr><th>Buyurtma</th><th>Status</th><th>Kuryer</th><th>Reja</th></tr></thead>
+            <tbody>{data.activeShipments.map((row) => <tr key={row.id}><td><Link className="text-brand-700 hover:underline" href={"/__console/orders/" + row.order_id}>#{row.order_id.slice(0, 8).toUpperCase()}</Link></td><td>{row.status}</td><td>{row.courier_id ? 'Biriktirilgan' : <span className="font-semibold text-amber-600">Kuryersiz</span>}</td><td className="text-xs text-ink-500">{row.planned_at ? new Date(row.planned_at).toLocaleString('uz-UZ') : '—'}</td></tr>)}</tbody>
+          </table>
+        </section>
+      )}
+
       <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
         <section className="card p-4">
           <div className="flex items-center gap-2"><Database className="h-5 w-5 text-brand-600" /><h2 className="font-bold">Boshqaruv oynasi</h2></div>
