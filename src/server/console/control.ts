@@ -39,6 +39,32 @@ export interface ControlSnapshot {
     stock: number;
     price: number;
   }>;
+  lowStockProducts: Array<{
+    id: string;
+    name_uz: string;
+    stock: number;
+    sold_count: number;
+  }>;
+  recentCustomers: Array<{
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    created_at: string;
+  }>;
+  failedPaymentRows: Array<{
+    id: string;
+    amount: number;
+    provider: string;
+    created_at: string;
+    provider_transaction_id: string | null;
+  }>;
+  activeShipments: Array<{
+    id: string;
+    order_id: string;
+    status: string;
+    courier_id: string | null;
+    planned_at: string | null;
+  }>;
   ai: {
     mode: 'observe' | 'suggest' | 'assist';
     auto_monitoring: boolean;
@@ -85,6 +111,10 @@ export async function controlSnapshot(): Promise<ControlSnapshot> {
     adminNotifications,
     audits,
     topProducts,
+    lowStockProducts,
+    recentCustomers,
+    failedPaymentRows,
+    activeShipments,
     aiSetting,
   ] = await Promise.all([
     client.from('orders').select('id', { count: 'exact', head: true }).gte('created_at', startOfDay.toISOString()),
@@ -106,6 +136,10 @@ export async function controlSnapshot(): Promise<ControlSnapshot> {
     client.from('notifications').select('id', { count: 'exact', head: true }).eq('is_admin_only', true).is('read_at', null),
     client.from('audit_log').select('id, action, actor_email, entity, created_at').order('created_at', { ascending: false }).limit(12),
     client.from('products').select('id, name_uz, sold_count, stock, price').eq('is_active', true).order('sold_count', { ascending: false }).limit(8),
+    client.from('products').select('id, name_uz, stock, sold_count').eq('is_active', true).lt('stock', 5).order('stock').limit(12),
+    client.from('profiles').select('id, full_name, email, created_at').order('created_at', { ascending: false }).limit(10),
+    client.from('payments').select('id, amount, provider, created_at, provider_transaction_id').eq('status', 'failed').order('created_at', { ascending: false }).limit(10),
+    client.from('shipments').select('id, order_id, status, courier_id, planned_at').in('status', ['pending', 'assigned', 'picked_up', 'in_transit']).order('created_at', { ascending: false }).limit(12),
     client.from('settings').select('value').eq('key', 'ai_control').maybeSingle(),
   ]);
 
@@ -135,6 +169,10 @@ export async function controlSnapshot(): Promise<ControlSnapshot> {
     unreadAdminNotifications: adminNotifications.count ?? 0,
     latestAudits: (audits.data ?? []) as ControlSnapshot['latestAudits'],
     topProducts: (topProducts.data ?? []) as ControlSnapshot['topProducts'],
+    lowStockProducts: (lowStockProducts.data ?? []) as ControlSnapshot['lowStockProducts'],
+    recentCustomers: (recentCustomers.data ?? []) as ControlSnapshot['recentCustomers'],
+    failedPaymentRows: (failedPaymentRows.data ?? []) as ControlSnapshot['failedPaymentRows'],
+    activeShipments: (activeShipments.data ?? []) as ControlSnapshot['activeShipments'],
     ai: {
       mode: asMode(rawAi.mode),
       auto_monitoring: asBool(rawAi.auto_monitoring, true),
