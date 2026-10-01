@@ -91,7 +91,10 @@ export function ConsoleShell({
   identity: ConsoleIdentity;
   children: React.ReactNode;
 }) {
-  const navItems = GROUPS.flatMap((group) => group.items);
+  const navItems: Array<{ href: string; label: string }> = GROUPS.reduce((items, group) => {
+    group.items.forEach((item) => items.push({ href: item.href, label: item.label }));
+    return items;
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-slate-50">
