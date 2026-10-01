@@ -282,12 +282,23 @@ export async function updateOrderStatus(_prev: FormState, formData: FormData): P
     return { ok: false, message: `Holatni o'zgartirish mumkin emas: ${before?.status} → ${parsed.data.status}` };
   }
 
-  if (parsed.data.comment) {
-    await client
-      .from('order_status_history')
-      .update({ comment: parsed.data.comment, changed_by: identity.userId })
-      .eq('order_id', parsed.data.order_id)
-      .eq('to_status', parsed.data.status);
+  const { error: historyError } = await client.from('order_status_history').insert({
+    order_id: parsed.data.order_id,
+    from_status: before?.status ?? null,
+    to_status: parsed.data.status,
+    changed_by: identity.userId,
+    comment: parsed.data.comment || null,
+  });
+
+  if (historyError) {
+    await audit({
+      actorId: identity.userId,
+      actorEmail: identity.email,
+      action: 'order.status.history_error',
+      entity: 'orders',
+      entityId: parsed.data.order_id,
+      after: { error: historyError.message },
+    });
   }
 
   const { data: order } = await client
@@ -614,6 +625,101 @@ export async function moderateReview(formData: FormData): Promise<void> {
     entityId: id,
   });
   revalidatePath(`${CONSOLE}/reviews`);
+  revalidateTag(CATALOG_TAG);
+}
+
+export async function toggleBanner(formData: FormData): Promise<void> {
+  const identity = await requireConsole();
+  const id = String(formData.get('id') ?? '');
+  const client = requireServiceClient();
+  const { data } = await client.from('banners').select('is_active').eq('id', id).maybeSingle();
+  if (!data) return;
+
+  const next = !data.is_active;
+  const { error } = await client.from('banners').update({ is_active: next }).eq('id', id);
+  if (error) throw new Error(error.message);
+
+  await audit({
+    actorId: identity.userId,
+    actorEmail: identity.email,
+    action: 'banner.toggle',
+    entity: 'banners',
+    entityId: id,
+    before: data,
+    after: { is_active: next },
+  });
+  revalidatePath(`${CONSOLE}/content`);
+  revalidateTag(CATALOG_TAG);
+}
+
+export async function deleteBanner(formData: FormData): Promise<void> {
+  const identity = await requireAdmin();
+  const id = String(formData.get('id') ?? '');
+  const client = requireServiceClient();
+  const { data: before } = await client.from('banners').select('*').eq('id', id).maybeSingle();
+  if (!before) return;
+
+  const { error } = await client.from('banners').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+
+  await audit({
+    actorId: identity.userId,
+    actorEmail: identity.email,
+    action: 'banner.delete',
+    entity: 'banners',
+    entityId: id,
+    before,
+  });
+  revalidatePath(`${CONSOLE}/content`);
+  revalidateTag(CATALOG_TAG);
+}
+
+export async function toggleNews(formData: FormData): Promise<void> {
+  const identity = await requireConsole();
+  const id = String(formData.get('id') ?? '');
+  const client = requireServiceClient();
+  const { data } = await client.from('news').select('is_published').eq('id', id).maybeSingle();
+  if (!data) return;
+
+  const next = !data.is_published;
+  const { error } = await client
+    .from('news')
+    .update({ is_published: next, published_at: next ? new Date().toISOString() : null })
+    .eq('id', id);
+  if (error) throw new Error(error.message);
+
+  await audit({
+    actorId: identity.userId,
+    actorEmail: identity.email,
+    action: 'news.toggle',
+    entity: 'news',
+    entityId: id,
+    before: data,
+    after: { is_published: next },
+  });
+  revalidatePath(`${CONSOLE}/content`);
+  revalidateTag(CATALOG_TAG);
+}
+
+export async function deleteNews(formData: FormData): Promise<void> {
+  const identity = await requireAdmin();
+  const id = String(formData.get('id') ?? '');
+  const client = requireServiceClient();
+  const { data: before } = await client.from('news').select('*').eq('id', id).maybeSingle();
+  if (!before) return;
+
+  const { error } = await client.from('news').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+
+  await audit({
+    actorId: identity.userId,
+    actorEmail: identity.email,
+    action: 'news.delete',
+    entity: 'news',
+    entityId: id,
+    before,
+  });
+  revalidatePath(`${CONSOLE}/content`);
   revalidateTag(CATALOG_TAG);
 }
 
