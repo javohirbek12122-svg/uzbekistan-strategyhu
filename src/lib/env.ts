@@ -7,9 +7,15 @@ function required(name: string, value: string | undefined): string {
   return value;
 }
 
+const DEFAULT_SUPABASE_URL = 'https://dsisxcusazkchntdbjah.supabase.co';
+const DEFAULT_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_5-B3ZPhrbdsfi68EBt-Umg_xA7-06Wl';
+
 export const publicEnv = {
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+  // These two values are intentionally public Supabase client credentials.
+  // Keep Vercel env vars as the preferred source, with safe fallbacks so preview
+  // deployments do not crash when NEXT_PUBLIC_* variables are missing.
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL,
+  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_PUBLISHABLE_KEY,
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
   mapsApiKey: process.env.NEXT_PUBLIC_MAPS_API_KEY ?? '',
 };
