@@ -35,7 +35,10 @@ export async function POST() {
       }],
     });
 
-    const text = response.candidates?.[0]?.content?.parts?.find((part) => part.text)?.text ?? 'AI tavsiya qaytarmadi.';
+    const result = response as unknown as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+    const text = result.candidates?.[0]?.content?.parts?.find((part) => part.text)?.text ?? 'AI tavsiya qaytarmadi.';
     return NextResponse.json({ ok: true, source: 'gemini', actor: identity.email, text, actions: buildFallback(snapshot) });
   } catch (error) {
     console.error('[console.ai-audit]', error);
