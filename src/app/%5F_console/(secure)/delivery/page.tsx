@@ -8,18 +8,30 @@ import { dateTime, money } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ConsoleDeliveryPage() {
+export default async function ConsoleDeliveryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ zone?: string }>;
+}) {
+  const { zone: zoneId = '' } = await searchParams;
   const [zones, { shipments, compensations }] = await Promise.all([consoleZones(), consoleDeliveryBoard()]);
+  const selectedZone = zoneId ? zones.find((zone) => zone.id === zoneId) ?? null : null;
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold">Yetkazib berish</h1>
-        <form action={runLateCompensations}>
+        <div>
+          <h1 className="text-xl font-bold">Yetkazib berish</h1>
+          <p className="text-sm text-ink-500">{zones.length} ta hudud · tariflar va SLA boshqaruvi</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {selectedZone && <Link href="/__console/delivery" className="btn-secondary">Yangi zona</Link>}
+          <form action={runLateCompensations}>
           <button type="submit" className="btn-secondary">
             Kechikkanlarga qoplama hisoblash
           </button>
-        </form>
+          </form>
+        </div>
       </div>
 
       <section className="card overflow-x-auto">
@@ -33,6 +45,7 @@ export default async function ConsoleDeliveryPage() {
               <th>Muddat</th>
               <th>SLA</th>
               <th>Holat</th>
+              <th />
             </tr>
           </thead>
           <tbody>
@@ -50,6 +63,11 @@ export default async function ConsoleDeliveryPage() {
                     {zone.is_active ? 'Faol' : 'Yopilgan'}
                   </span>
                 </td>
+                <td className="text-right">
+                  <Link href={`/__console/delivery?zone=${zone.id}`} className="btn-secondary py-1 text-xs">
+                    Tahrirlash
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -58,11 +76,13 @@ export default async function ConsoleDeliveryPage() {
 
       <div className="grid gap-5 lg:grid-cols-2">
         <section className="card p-4">
-          <h2 className="mb-3 font-semibold">Hudud qo&apos;shish / tahrirlash</h2>
+          <h2 className="mb-3 font-semibold">{selectedZone ? 'Hududni tahrirlash' : 'Yangi hudud'}</h2>
           <p className="mb-3 text-xs text-ink-500">
-            Mavjud hududni tahrirlash uchun slug&apos;ni bir xil qoldiring — tarif yangilanadi.
+            {selectedZone
+              ? 'Tarif, SLA va hudud maʼlumotlarini yangilang.'
+              : 'Yangi yetkazib berish hududini va tariflarini kiriting.'}
           </p>
-          <ZoneForm />
+          <ZoneForm zone={selectedZone} />
         </section>
 
         <section className="card p-4">
