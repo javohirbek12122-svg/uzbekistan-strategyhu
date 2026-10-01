@@ -16,6 +16,12 @@ import { audit, isEmailAllowlisted } from '@/lib/security/console';
 const OWNER_EMAIL = 'javohirbek12122@gmail.com';
 
 export async function signUp(_prev: FormState, formData: FormData): Promise<FormState> {
+  const control = serviceClient();
+  const storeSetting = control ? await control.from('settings').select('value').eq('key', 'store_control').maybeSingle() : null;
+  const storeControl = (storeSetting?.data?.value ?? {}) as Record<string, unknown>;
+  if (storeControl.maintenance_mode === true) return { ok: false, message: 'Do‘kon texnik xizmat rejimida.' };
+  if (storeControl.registration_enabled === false) return { ok: false, message: 'Yangi ro‘yxatdan o‘tish vaqtincha yopilgan.' };
+
   const parsed = signUpSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return zodToFormState(parsed.error);
 
