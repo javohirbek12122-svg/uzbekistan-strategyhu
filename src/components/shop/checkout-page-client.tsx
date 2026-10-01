@@ -42,7 +42,6 @@ export function CheckoutPageClient({
           </details>
         </>
       )}
->
     </div>
   );
 }
