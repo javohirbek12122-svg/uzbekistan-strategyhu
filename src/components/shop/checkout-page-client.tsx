@@ -1,9 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { CheckoutForm } from '@/components/shop/checkout-form';
 import { AddressForm } from '@/components/shop/address-form';
-import { CheckoutModal } from '@/components/shop/checkout/checkout-modal';
 import type { Address, DeliveryZone } from '@/lib/types';
 
 export function CheckoutPageClient({
@@ -19,8 +17,6 @@ export function CheckoutPageClient({
   weightGram: number;
   cardNumber: string;
 }) {
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-bold">Buyurtmani rasmiylashtirish</h1>
@@ -46,15 +42,7 @@ export function CheckoutPageClient({
           </details>
         </>
       )}
-
-      <CheckoutModal
-        open={checkoutOpen}
-        onClose={() => setCheckoutOpen(false)}
-        orderNumber={orderNumber}
-        totalAmount={0}
-        cardNumber={cardNumber}
-        provider={provider}
-      />
+>
     </div>
   );
 }
