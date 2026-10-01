@@ -3,13 +3,18 @@ import { Bell, LayoutGrid, LogIn, Package, Search, ShieldCheck, ShoppingCart, St
 import { getCart, getCategories, getMyNotifications, getStoreSettings } from '@/server/queries';
 import { getSessionUser } from '@/lib/supabase/server';
 import { CategoryBar } from './category-bar';
-import type { Category, StoreSettings } from '@/lib/types';
+import type { Category } from '@/lib/types';
 
 export async function Header() {
   let categories: Category[] = [];
   let cart: { count: number } = { count: 0 };
   let user: { id: string } | null = null;
-  let settings: StoreSettings = { name: 'Parkent E-Mart', phone: '+998 90 000 00 00', telegram: '', address: '' };
+  let settings: { name: string; phone: string; telegram: string; address: string } = {
+    name: 'Parkent E-Mart',
+    phone: '+998 90 000 00 00',
+    telegram: '',
+    address: '',
+  };
   let unread = 0;
 
   try {
