@@ -1,6 +1,7 @@
 import { Bot, CircleCheck, LockKeyhole } from 'lucide-react';
 import { ConsoleModulePage } from '@/components/console/module-page';
 import { AIControlForm } from '@/components/console/ai-control-form';
+import { AIOperationsAudit } from '@/components/console/ai-operations-audit';
 import { controlSnapshot } from '@/server/console/control';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,7 @@ export default async function ConsoleAiPage() {
         </div>
       </section>
       <AIControlForm initial={data.ai} />
+      <AIOperationsAudit />
       <section className="grid gap-3 sm:grid-cols-2">
         <div className="card p-4"><CircleCheck className="mb-2 h-5 w-5 text-emerald-600" /><h2 className="font-bold">Xavfsiz avtomatika</h2><p className="mt-1 text-sm text-ink-500">Monitoring, digest, stock alert va support triage kabi past-xavfli jarayonlar.</p></div>
         <div className="card p-4"><LockKeyhole className="mb-2 h-5 w-5 text-amber-600" /><h2 className="font-bold">Majburiy inson nazorati</h2><p className="mt-1 text-sm text-ink-500">Pul, rol, xavfsizlik, o‘chirish va muhim buyurtma o‘zgarishlari uchun tasdiq.</p></div>
