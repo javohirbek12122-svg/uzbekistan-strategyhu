@@ -82,6 +82,46 @@ function asMode(value: unknown): ControlSnapshot['ai']['mode'] {
   return value === 'observe' || value === 'assist' || value === 'suggest' ? value : 'suggest';
 }
 
+export interface ControlSettings {
+  store: {
+    maintenance_mode: boolean;
+    checkout_enabled: boolean;
+    registration_enabled: boolean;
+    new_orders_enabled: boolean;
+    delivery_enabled: boolean;
+  };
+  ai: ControlSnapshot['ai'];
+}
+
+export async function controlSettings(): Promise<ControlSettings> {
+  await requireConsole();
+  const client = requireServiceClient();
+  const [{ data: storeSetting }, { data: aiSetting }] = await Promise.all([
+    client.from('settings').select('value').eq('key', 'store_control').maybeSingle(),
+    client.from('settings').select('value').eq('key', 'ai_control').maybeSingle(),
+  ]);
+
+  const rawStore = (storeSetting?.value ?? {}) as Record<string, unknown>;
+  const rawAi = (aiSetting?.value ?? {}) as Record<string, unknown>;
+
+  return {
+    store: {
+      maintenance_mode: asBool(rawStore.maintenance_mode, false),
+      checkout_enabled: asBool(rawStore.checkout_enabled, true),
+      registration_enabled: asBool(rawStore.registration_enabled, true),
+      new_orders_enabled: asBool(rawStore.new_orders_enabled, true),
+      delivery_enabled: asBool(rawStore.delivery_enabled, true),
+    },
+    ai: {
+      mode: asMode(rawAi.mode),
+      auto_monitoring: asBool(rawAi.auto_monitoring, true),
+      auto_notifications: asBool(rawAi.auto_notifications, true),
+      require_approval_for_mutations: asBool(rawAi.require_approval_for_mutations, true),
+      daily_digest: asBool(rawAi.daily_digest, true),
+    },
+  };
+}
+
 export async function controlSnapshot(): Promise<ControlSnapshot> {
   await requireConsole();
   const client = requireServiceClient();
