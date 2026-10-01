@@ -3,12 +3,29 @@ import type { Metadata } from 'next';
 import { getAddresses, getCart, getZones } from '@/server/queries';
 import { CheckoutForm } from '@/components/shop/checkout-form';
 import { AddressForm } from '@/components/shop/address-form';
+import { requireServiceClient } from '@/lib/supabase/service';
 
 export const metadata: Metadata = { title: 'Rasmiylashtirish' };
 export const dynamic = 'force-dynamic';
 
 export default async function CheckoutPage() {
-  const [cart, addresses, zones] = await Promise.all([getCart(), getAddresses(), getZones()]);
+  const [cart, addresses, zones, storeSetting] = await Promise.all([
+    getCart(),
+    getAddresses(),
+    getZones(),
+    requireServiceClient().from('settings').select('value').eq('key', 'store_control').maybeSingle(),
+  ]);
+
+  const control = (storeSetting.data?.value ?? {}) as Record<string, unknown>;
+  if (control.checkout_enabled === false || control.new_orders_enabled === false || control.maintenance_mode === true) {
+    return (
+      <div className="card mx-auto max-w-lg p-8 text-center">
+        <h1 className="text-lg font-bold">Rasmiylashtirish vaqtincha yopiq</h1>
+        <p className="mt-2 text-sm text-ink-500">Admin boshqaruvida checkout yoki yangi buyurtmalar vaqtincha o‘chirildi.</p>
+        <Link href="/cart" className="btn-primary mt-4">Savatga qaytish</Link>
+      </div>
+    );
+  }
 
   if (cart.items.length === 0) {
     return (
