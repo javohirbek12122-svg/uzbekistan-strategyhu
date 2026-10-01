@@ -723,6 +723,69 @@ export async function deleteNews(formData: FormData): Promise<void> {
   revalidateTag(CATALOG_TAG);
 }
 
+export async function saveAiControl(_prev: FormState, formData: FormData): Promise<FormState> {
+  const identity = await requireAdmin();
+  const mode = String(formData.get('mode') ?? 'suggest');
+  if (!['observe', 'suggest', 'assist'].includes(mode)) {
+    return { ok: false, message: 'AI rejimi noto‘g‘ri' };
+  }
+
+  const value = {
+    mode,
+    auto_monitoring: formData.get('auto_monitoring') === 'on',
+    auto_notifications: formData.get('auto_notifications') === 'on',
+    require_approval_for_mutations: formData.get('require_approval_for_mutations') === 'on',
+    daily_digest: formData.get('daily_digest') === 'on',
+  };
+
+  const { error } = await requireServiceClient()
+    .from('settings')
+    .upsert({ key: 'ai_control', value, updated_by: identity.userId, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit({
+    actorId: identity.userId,
+    actorEmail: identity.email,
+    action: 'ai.control.update',
+    entity: 'settings',
+    entityId: 'ai_control',
+    after: value,
+  });
+  revalidatePath(CONSOLE + '/ai');
+  revalidatePath(CONSOLE);
+  return { ok: true, message: 'AI boshqaruvi saqlandi' };
+}
+
+export async function saveStoreControl(_prev: FormState, formData: FormData): Promise<FormState> {
+  const identity = await requireAdmin();
+  const value = {
+    maintenance_mode: formData.get('maintenance_mode') === 'on',
+    checkout_enabled: formData.get('checkout_enabled') === 'on',
+    registration_enabled: formData.get('registration_enabled') === 'on',
+    new_orders_enabled: formData.get('new_orders_enabled') === 'on',
+    delivery_enabled: formData.get('delivery_enabled') === 'on',
+  };
+
+  const { error } = await requireServiceClient()
+    .from('settings')
+    .upsert({ key: 'store_control', value, updated_by: identity.userId, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+
+  if (error) return { ok: false, message: error.message };
+
+  await audit({
+    actorId: identity.userId,
+    actorEmail: identity.email,
+    action: 'store.control.update',
+    entity: 'settings',
+    entityId: 'store_control',
+    after: value,
+  });
+  revalidatePath(CONSOLE + '/automation');
+  revalidatePath(CONSOLE + '/health');
+  return { ok: true, message: 'Global do‘kon boshqaruvi saqlandi' };
+}
+
 export async function saveSetting(_prev: FormState, formData: FormData): Promise<FormState> {
   const identity = await requireAdmin();
   const parsed = settingSchema.safeParse(Object.fromEntries(formData));
