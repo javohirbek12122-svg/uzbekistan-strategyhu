@@ -2,6 +2,7 @@ import 'server-only';
 import { cookies, headers } from 'next/headers';
 import { authenticator } from 'otplib';
 import { serviceClient, requireServiceClient } from '../supabase/service';
+import { createClient } from '../supabase/server';
 import { serverEnv } from '../env';
 import { decryptSecret, encryptSecret, generateRecoveryCodes, randomToken, sha256 } from './crypto';
 
@@ -301,24 +302,43 @@ export interface ConsoleIdentity {
  * IP allow-list + a valid, unexpired MFA-passed console session.
  */
 export async function getConsoleIdentity(): Promise<ConsoleIdentity | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) return null;
+  if (!(await isEmailAllowlisted(user.email))) return null;
+
   const client = serviceClient();
   if (!client) return null;
+  const { data: roles } = await client
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .in('role', ['admin', 'manager']);
+  const role = (roles ?? []).some((r) => r.role === 'admin')
+    ? 'admin'
+    : (roles ?? []).length > 0
+      ? 'manager'
+      : null;
+  if (!role) return null;
 
-  const { data } = await client
-    .from('profiles')
-    .select('id, email, user_roles!inner(role)')
-    .eq('user_roles.role', 'admin')
-    .order('id')
-    .limit(1)
+  const { ip } = await requestMeta();
+  if (!(await isIpAllowed(ip))) return null;
+
+  const store = await cookies();
+  const token = store.get(CONSOLE_COOKIE)?.value;
+  if (!token) return null;
+  const { data: session } = await client
+    .from('admin_sessions')
+    .select('user_id, expires_at, revoked_at')
+    .eq('token_hash', sha256(token))
     .maybeSingle();
+  if (!session || session.user_id !== user.id) return null;
+  if (session.revoked_at) return null;
+  if (new Date(session.expires_at).getTime() < Date.now()) return null;
 
-  if (!data?.id || !data.email) return null;
-
-  return {
-    userId: data.id,
-    email: data.email,
-    role: 'admin',
-  };
+  return { userId: user.id, email: user.email, role: role as 'admin' | 'manager' };
 }
 
 export async function requireConsole(): Promise<ConsoleIdentity> {
