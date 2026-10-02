@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from '@/components/theme-provider';
+import { AdminHashRouter } from '@/components/site/admin-hash-router';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -33,7 +34,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <meta name="apple-mobile-web-app-title" content="Parkent E-Mart" />
       </head>
       <body className="font-sans bg-slate-50 min-h-screen">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+        <AdminHashRouter />
+        {children}
+      </ThemeProvider>
       </body>
     </html>
   );

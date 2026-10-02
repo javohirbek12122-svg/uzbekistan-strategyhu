@@ -16,6 +16,13 @@ const DEFAULT_LOCKOUT_MINUTES = 15;
 const TOTP_WINDOW_BACK = 1;
 const TOTP_WINDOW_FORWARD = 1;
 
+export function getConsoleServerConfig() {
+  return {
+    serviceRoleConfigured: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+    encryptionConfigured: Boolean(process.env.CONSOLE_ENCRYPTION_KEY),
+  };
+}
+
 authenticator.options = { window: [TOTP_WINDOW_BACK, TOTP_WINDOW_FORWARD], step: 30 };
 
 export interface SecuritySettings {
