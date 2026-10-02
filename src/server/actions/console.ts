@@ -30,6 +30,7 @@ import {
   issueConsoleSession,
   recordLoginAttempt,
   requestMeta,
+  getConsoleServerConfig,
   requireAdmin,
   requireConsole,
   revokeConsoleSession,
@@ -50,6 +51,16 @@ export async function consoleLogin(_prev: FormState, formData: FormData): Promis
   const { email, password } = parsed.data;
   const { ip } = await requestMeta();
   const genericError: FormState = { ok: false, message: "Kirish ma'lumotlari xato" };
+
+  const serverConfig = getConsoleServerConfig();
+  if (!serverConfig.serviceRoleConfigured || !serverConfig.encryptionConfigured) {
+    return {
+      ok: false,
+      message:
+        "Admin server konfiguratsiyasi tugallanmagan. Vercel Environment Variables ichida " +
+        "SUPABASE_SERVICE_ROLE_KEY va CONSOLE_ENCRYPTION_KEY sozlanishi kerak.",
+    };
+  }
 
   if (await isLockedOut(email)) {
     return { ok: false, message: 'Juda ko\'p urinish. Birozdan keyin qayta urinib ko\'ring.' };
@@ -134,6 +145,16 @@ export async function startMfaEnrolment(): Promise<
   | { ok: true; secret: string; otpauthUrl: string; qrDataUrl: string; recoveryCodes: string[] }
   | { ok: false; message: string }
 > {
+  const config = getConsoleServerConfig();
+  if (!config.serviceRoleConfigured || !config.encryptionConfigured) {
+    return {
+      ok: false,
+      message:
+        "Admin server konfiguratsiyasi tugallanmagan. Vercel Environment Variables ichida " +
+        "SUPABASE_SERVICE_ROLE_KEY va CONSOLE_ENCRYPTION_KEY sozlanishi kerak.",
+    };
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
