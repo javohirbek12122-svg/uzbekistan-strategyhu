@@ -104,7 +104,7 @@ export async function Header() {
           </Link>
           {user ? (
             <>
-              <Link href="/__console/login" className="btn-ghost px-2" aria-label="Admin panel">
+              <Link href="/#admin" className="btn-ghost px-2" aria-label="Admin panel">
                 <ShieldCheck className="h-5 w-5" />
                 <span className="hidden xl:inline">Admin panel</span>
               </Link>
