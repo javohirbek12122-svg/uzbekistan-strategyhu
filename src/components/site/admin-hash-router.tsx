@@ -12,7 +12,7 @@ export function AdminHashRouter() {
   useEffect(() => {
     const redirectAdminHash = () => {
       if (window.location.hash.toLowerCase() !== '#admin') return;
-      window.location.replace('/__console/login');
+      window.location.replace('/__console');
     };
 
     redirectAdminHash();
