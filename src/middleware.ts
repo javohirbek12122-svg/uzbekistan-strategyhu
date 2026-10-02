@@ -39,6 +39,12 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith(CONSOLE_PREFIX)) {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
     response.headers.set('Cache-Control', 'no-store');
+    if (!user && pathname !== `${CONSOLE_PREFIX}/login`) {
+      const url = request.nextUrl.clone();
+      url.pathname = `${CONSOLE_PREFIX}/login`;
+      url.search = '';
+      return NextResponse.redirect(url);
+    }
     return response;
   }
 
