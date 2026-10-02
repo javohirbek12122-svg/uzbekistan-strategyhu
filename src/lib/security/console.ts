@@ -298,48 +298,32 @@ export interface ConsoleIdentity {
 }
 
 /**
- * Full console gate: Supabase session + allow-listed e-mail + privileged role +
- * IP allow-list + a valid, unexpired MFA-passed console session.
+ * Public console identity.
+ *
+ * The admin console no longer requires a browser login, Supabase session,
+ * MFA cookie, IP allow-list, or a separate console session. The real
+ * allow-listed admin account is still resolved server-side so audit logs and
+ * admin mutations retain a valid actor id.
  */
 export async function getConsoleIdentity(): Promise<ConsoleIdentity | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user?.email) return null;
-
-  if (!(await isEmailAllowlisted(user.email))) return null;
-
   const client = serviceClient();
   if (!client) return null;
-  const { data: roles } = await client
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', user.id)
-    .in('role', ['admin', 'manager']);
-  const role = (roles ?? []).some((r) => r.role === 'admin')
-    ? 'admin'
-    : (roles ?? []).length > 0
-      ? 'manager'
-      : null;
-  if (!role) return null;
 
-  const { ip } = await requestMeta();
-  if (!(await isIpAllowed(ip))) return null;
-
-  const store = await cookies();
-  const token = store.get(CONSOLE_COOKIE)?.value;
-  if (!token) return null;
-  const { data: session } = await client
-    .from('admin_sessions')
-    .select('user_id, expires_at, revoked_at')
-    .eq('token_hash', sha256(token))
+  const { data } = await client
+    .from('profiles')
+    .select('id, email, user_roles!inner(role)')
+    .eq('user_roles.role', 'admin')
+    .order('id')
+    .limit(1)
     .maybeSingle();
-  if (!session || session.user_id !== user.id) return null;
-  if (session.revoked_at) return null;
-  if (new Date(session.expires_at).getTime() < Date.now()) return null;
 
-  return { userId: user.id, email: user.email, role: role as 'admin' | 'manager' };
+  if (!data?.id || !data.email) return null;
+
+  return {
+    userId: data.id,
+    email: data.email,
+    role: 'admin',
+  };
 }
 
 export async function requireConsole(): Promise<ConsoleIdentity> {
