@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import { ArrowRight, MapPin, MapPin, Sparkles, Wallet, Sparkles } from 'lucide-react';
+import { ArrowRight, MapPin, Sparkles, Wallet } from 'lucide-react';
 import type { CoinWallet } from '@/server/coins';
 
 export function InnovationHub({ wallet }: { wallet: CoinWallet | null }) {
@@ -8,7 +8,7 @@ export function InnovationHub({ wallet }: { wallet: CoinWallet | null }) {
     ['01', 'Coin Pulse', 'Ketma-ket kunlar uzaygani sari kunlik reward 5–19 Coin oralig‘ida o‘sadi.'],
     ['02', 'AI Deep Mode', '3 Coin evaziga AI Studio 24 soatlik chuqur rejimga o‘tadi.'],
     ['03', 'Price Signal', '5 Coin evaziga tanlangan mahsulot uchun 7 kunlik kuzatuv yoqiladi.'],
-    ['04', 'Delivery ShieldCheck', '20 Coin rezerv qilinadi; vaqtida yetkazilsa qaytadi, kechiksa +10 bonus beradi.'],
+    ['04', 'Delivery Shield', '20 Coin rezerv qilinadi; vaqtida yetkazilsa qaytadi, kechiksa +10 bonus beradi.'],
   ];
   return <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
     <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-brand-100/70 blur-2xl" />
