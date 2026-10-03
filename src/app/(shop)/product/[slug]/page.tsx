@@ -5,6 +5,7 @@ import { Clock, Package, ShieldCheck, Star, Truck } from 'lucide-react';
 import { getProductBySlug, getProductReviews, getZones } from '@/server/queries';
 import { productImage } from '@/components/shop/product-card';
 import { AddToCartButton } from '@/components/shop/add-to-cart-button';
+import { PriceSignalButton } from '@/components/shop/coin-actions';
 import { discountPercent, money } from '@/lib/format';
 import { calcDeliveryFee, formatEta } from '@/lib/delivery';
 import { dateTime } from '@/lib/format';
@@ -119,6 +120,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <Link href="/cart" className="btn-secondary w-full">
               Savatga o&apos;tish
             </Link>
+            <PriceSignalButton productId={product.id} targetPrice={off !== null ? product.price : undefined} />
             <ul className="space-y-2 pt-2 text-xs text-ink-500">
               <li className="flex items-center gap-2"><Truck className="h-4 w-4" /> Parkent bo&apos;ylab yetkazib berish</li>
               <li className="flex items-center gap-2"><Clock className="h-4 w-4" /> Kechiksa 5 000 so&apos;m qoplama</li>
