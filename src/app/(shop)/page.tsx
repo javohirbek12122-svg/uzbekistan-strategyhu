@@ -38,6 +38,7 @@ export default async function HomePage() {
     <div className="space-y-8">
       {!isSupabaseConfigured && <SetupNotice />}
       <Hero banners={banners} />
+      <InnovationHub wallet={coinWallet} />
 
       {categories.length > 0 && (
         <section>
