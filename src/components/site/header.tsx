@@ -65,7 +65,8 @@ export async function Header() {
           </span>
         </Link>
 
-        <Link href="/catalog" className="btn-secondary hidden shrink-0 lg:inline-flex">
+        <div className="hidden shrink-0 items-center gap-1 lg:flex">
+          <Link href="/catalog" className="btn-secondary">
           <LayoutGrid className="h-4 w-4" />
           Katalog
         </Link>
