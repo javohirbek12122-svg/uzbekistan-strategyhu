@@ -307,7 +307,6 @@ export async function getConsoleIdentity(): Promise<ConsoleIdentity | null> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user?.email) return null;
-
   if (!(await isEmailAllowlisted(user.email))) return null;
 
   const client = serviceClient();

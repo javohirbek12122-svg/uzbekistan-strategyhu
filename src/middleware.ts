@@ -45,6 +45,7 @@ export async function middleware(request: NextRequest) {
       url.search = '';
       return NextResponse.redirect(url);
     }
+    return response;
   }
 
   const protectedPaths = ['/checkout', '/orders', '/profile', '/support'];
