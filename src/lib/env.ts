@@ -9,6 +9,7 @@ function required(name: string, value: string | undefined): string {
 
 const DEFAULT_SUPABASE_URL = 'https://dsisxcusazkchntdbjah.supabase.co';
 const DEFAULT_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_5-B3ZPhrbdsfi68EBt-Umg_xA7-06Wl';
+const DEFAULT_SITE_URL = 'https://svguzbekistan-strategyhu.vercel.app';
 
 export const publicEnv = {
   // These two values are intentionally public Supabase client credentials.
@@ -16,7 +17,9 @@ export const publicEnv = {
   // deployments do not crash when NEXT_PUBLIC_* variables are missing.
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL,
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_PUBLISHABLE_KEY,
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+  // Use the real deployed origin when NEXT_PUBLIC_SITE_URL is not configured.
+  // This keeps auth redirects on the live site instead of falling back to localhost.
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL,
   mapsApiKey: process.env.NEXT_PUBLIC_MAPS_API_KEY ?? '',
 };
 
