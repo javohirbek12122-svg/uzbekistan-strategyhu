@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { Sparkles, Sparkles, Wallet, Mic, Search, Sparkles, Sparkles } from 'lucide-react';
+import { Sparkles, Wallet, Mic, Search } from 'lucide-react';
 
 const presets = [
   { title: 'Oilaviy hafta', copy: '7 kunlik ro‘zg‘or savatini xarajatni nazorat qilib tuzish', icon: '🧺' },
