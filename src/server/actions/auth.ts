@@ -39,13 +39,13 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     const message = normalized.includes('already registered') || normalized.includes('already been registered')
       ? 'Bu email bilan hisob allaqachon mavjud'
       : normalized.includes('password')
-        ? 'Parol kamida 10 belgi, katta-kichik harf va raqamdan iborat bo\'lsin'
+        ? "Parol kamida 8 belgidan iborat bo‘lishi kerak"
         : normalized.includes('rate limit')
-          ? 'Juda ko\'p urinish bo\'ldi. Bir necha daqiqadan keyin qayta urinib ko\'ring.'
-          : 'Ro\'yxatdan o\'tishda xatolik yuz berdi. Email manzilini tekshirib, qayta urinib ko\'ring.';
+          ? 'Juda ko‘p urinish bo‘ldi. Bir necha daqiqadan keyin qayta urinib ko‘ring.'
+          : 'Ro‘yxatdan o‘tishda xatolik yuz berdi. Email manzilini tekshirib, qayta urinib ko‘ring.';
     return { ok: false, message };
   }
-  if (!data.user) return { ok: false, message: 'Hisob yaratilmadi. Qayta urinib ko\'ring.' };
+  if (!data.user) return { ok: false, message: 'Hisob yaratilmadi. Qayta urinib ko‘ring.' };
 
   const admin = serviceClient();
 
@@ -54,28 +54,35 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
       { email: OWNER_EMAIL, note: 'owner' },
       { onConflict: 'email' },
     );
-    if (ownerSetupError) return { ok: false, message: 'Admin hisob sozlanmadi. Qayta urinib ko\'ring.' };
+    if (ownerSetupError) return { ok: false, message: 'Admin hisob sozlanmadi. Qayta urinib ko‘ring.' };
     const { error: roleError } = await admin.from('user_roles').upsert(
       { user_id: data.user.id, role: 'admin' },
       { onConflict: 'user_id,role' },
     );
-    if (roleError) return { ok: false, message: 'Admin roli sozlanmadi. Qayta urinib ko\'ring.' };
+    if (roleError) return { ok: false, message: 'Admin roli sozlanmadi. Qayta urinib ko‘ring.' };
   }
 
-  // This project currently has email confirmation enabled but no working SMS
-  // provider. Confirm the newly created account server-side, then establish a
-  // normal session so the customer can use the site immediately.
+  // When the service-role key exists, activate the new account immediately.
+  // Without it, keep Supabase's normal email-confirmation flow instead of
+  // redirecting a user into a session that does not exist.
   if (!data.session && admin) {
     const { error: confirmError } = await admin.auth.admin.updateUserById(data.user.id, {
       email_confirm: true,
     });
-    if (confirmError) return { ok: false, message: 'Hisob tasdiqlanmadi. Qayta urinib ko\'ring.' };
+    if (confirmError) return { ok: false, message: 'Hisob tasdiqlanmadi. Qayta urinib ko‘ring.' };
 
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: parsed.data.email,
       password: parsed.data.password,
     });
     if (signInError) return { ok: false, message: 'Hisob yaratildi, lekin kirish amalga oshmadi.' };
+  }
+
+  if (!data.session && !admin) {
+    return {
+      ok: true,
+      message: 'Hisob yaratildi. Emailingizga yuborilgan tasdiqlash havolasini bosing, so‘ng kirish sahifasidan kiring.',
+    };
   }
 
   redirect('/?welcome=1');
@@ -167,7 +174,7 @@ export async function sendPhoneCode(_prev: FormState, formData: FormData): Promi
       data: { phone: parsed.data.phone, full_name: 'Mijoz' },
     },
   });
-  if (error) return { ok: false, message: 'SMS yuborilmadi. Raqamni tekshiring yoki keyinroq urinib ko\'ring.' };
+  if (error) return { ok: false, message: 'SMS yuborilmadi. Raqamni tekshiring yoki keyinroq urinib ko‘ring.' };
   return { ok: true, message: 'SMS kodi yuborildi. 6 xonali kodni kiriting.' };
 }
 
@@ -181,7 +188,7 @@ export async function verifyPhoneCode(_prev: FormState, formData: FormData): Pro
     token: parsed.data.token!,
     type: 'sms',
   });
-  if (error || !data.user) return { ok: false, message: 'SMS kodi noto\'g\'ri yoki muddati tugagan.' };
+  if (error || !data.user) return { ok: false, message: 'SMS kodi noto‘g‘ri yoki muddati tugagan.' };
 
   const admin = serviceClient();
   if (admin) {
