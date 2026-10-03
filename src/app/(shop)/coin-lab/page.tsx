@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import { Coins, Flame, Radar, Shield, Sparkles } from 'lucide-react';
+import { Coins, Flame, MapPin, ShieldCheck, Sparkles } from 'lucide-react';
 import { getSessionUser } from '@/lib/supabase/server';
 import { getActiveAiBoost, getCoinLedger, getCoinWallet, getLatestCoinSignals } from '@/server/coins';
 import { DailyCoinButton, AiBoostButton } from '@/components/shop/coin-actions';
@@ -48,8 +48,8 @@ export default async function CoinLabPage() {
     <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <article className="card p-5"><Coins className="h-5 w-5 text-amber-500"/><h3 className="mt-3 font-bold">Pulse</h3><p className="mt-1 text-xs text-ink-500">Streak asosida o‘suvchi reward.</p></article>
       <article className="card p-5"><Sparkles className="h-5 w-5 text-brand-600"/><h3 className="mt-3 font-bold">Deep</h3><p className="mt-1 text-xs text-ink-500">AI imkoniyatlarini 24 soat kuchaytiradi.</p></article>
-      <article className="card p-5"><Radar className="h-5 w-5 text-sky-600"/><h3 className="mt-3 font-bold">Signal</h3><p className="mt-1 text-xs text-ink-500">7 kunlik narx kuzatuvi.</p></article>
-      <article className="card p-5"><Shield className="h-5 w-5 text-emerald-600"/><h3 className="mt-3 font-bold">Shield</h3><p className="mt-1 text-xs text-ink-500">20 Coin rezerv va kechikish bonus mexanizmi.</p></article>
+      <article className="card p-5"><MapPin className="h-5 w-5 text-sky-600"/><h3 className="mt-3 font-bold">Signal</h3><p className="mt-1 text-xs text-ink-500">7 kunlik narx kuzatuvi.</p></article>
+      <article className="card p-5"><ShieldCheck className="h-5 w-5 text-emerald-600"/><h3 className="mt-3 font-bold">ShieldCheck</h3><p className="mt-1 text-xs text-ink-500">20 Coin rezerv va kechikish bonus mexanizmi.</p></article>
     </section>
 
     <section className="card p-5">
