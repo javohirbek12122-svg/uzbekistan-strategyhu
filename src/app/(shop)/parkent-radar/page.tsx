@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import { Sparkles, Clock, MapPin, Sparkles, MapPin, ShieldCheckCheck, Sparkles } from 'lucide-react';
+import { Sparkles, Clock, MapPin, ShieldCheck } from 'lucide-react';
 import { getZones } from '@/server/queries';
 import { getLatestProducts } from '@/server/coins';
 import { money } from '@/lib/format';
@@ -8,7 +8,7 @@ import { formatEta } from '@/lib/delivery';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ParkentMapPinPage() {
+export default async function ParkentRadarPage() {
   const [zones, products] = await Promise.all([getZones(), getLatestProducts(6)]);
   return <div className="space-y-6">
     <section className="relative overflow-hidden rounded-3xl bg-slate-950 p-6 text-white sm:p-8">
@@ -37,7 +37,7 @@ export default async function ParkentMapPinPage() {
 
     <section className="grid gap-4 lg:grid-cols-[.8fr_1.2fr]">
       <div className="card p-5">
-        <div className="flex items-center gap-2"><ShieldCheckCheck className="h-5 w-5 text-brand-600"/><h2 className="font-bold">MapPin yondashuvi</h2></div>
+        <div className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-brand-600"/><h2 className="font-bold">MapPin yondashuvi</h2></div>
         <p className="mt-2 text-sm text-ink-500">Hudud kartasi faqat ma'lumot bermaydi: u katalog, AI va yetkazish qarorini birlashtirish uchun xizmat qiladi.</p>
         <div className="mt-4 space-y-2 text-xs"><div className="rounded-xl bg-slate-50 p-3">1. Hududingizni aniqlang</div><div className="rounded-xl bg-slate-50 p-3">2. AI’dan xarid maqsadini tuzing</div><div className="rounded-xl bg-slate-50 p-3">3. Signal va ShieldCheck bilan riskni boshqaring</div></div>
       </div>
