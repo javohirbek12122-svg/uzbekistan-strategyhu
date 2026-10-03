@@ -69,7 +69,11 @@ export async function Header() {
           <Link href="/catalog" className="btn-secondary">
           <LayoutGrid className="h-4 w-4" />
           Katalog
-        </Link>
+          </Link>
+          <Link href="/ai-lab" className="btn-ghost">AI Lab</Link>
+          <Link href="/coin-lab" className="btn-ghost">Coin</Link>
+          <Link href="/parkent-radar" className="btn-ghost">Radar</Link>
+        </div>
 
         <form action="/catalog" className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
