@@ -51,7 +51,7 @@ export function PriceSignalButton({ productId, targetPrice }: { productId: strin
   </div>;
 }
 
-export function DeliveryShieldCheckButton({ orderId }: { orderId: string }) {
+export function DeliveryShieldButton({ orderId }: { orderId: string }) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState('');
   return <div>
@@ -59,7 +59,7 @@ export function DeliveryShieldCheckButton({ orderId }: { orderId: string }) {
       const r = await armDeliveryShield(orderId); setMessage(r.message); window.dispatchEvent(new CustomEvent('coin-updated'));
     })} className="btn-secondary w-full justify-center">
       {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-      20 Coin → Delivery ShieldCheck
+      20 Coin → Delivery Shield
     </button>
     <Result message={message} />
   </div>;
