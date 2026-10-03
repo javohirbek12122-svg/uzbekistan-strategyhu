@@ -11,7 +11,7 @@ const items = [
   { href: '/', label: 'Asosiy', icon: Home },
   { href: '/catalog', label: 'Katalog', icon: Grid3x3 },
   { href: '/ai-lab', label: 'AI', icon: Sparkles },
-  { href: '/tracking', label: 'Reyslar', icon: MapPin },
+  { href: '/parkent-radar', label: 'Radar', icon: MapPin },
   { href: '/b2b', label: 'B2B', icon: Briefcase },
   { href: '/wallet', label: 'Hamyon', icon: Wallet },
   { href: '/profile', label: 'Profil', icon: User },
