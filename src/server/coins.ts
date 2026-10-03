@@ -61,7 +61,7 @@ export async function getLatestCoinSignals() {
 export async function getLatestProducts(limit = 8) {
   const client = requireServiceClient();
   const { data } = await client.from('products')
-    .select('id,name_uz,price,rating,reviews_count,stock,is_active,is_featured')
+    .select('id,slug,name_uz,price,rating,reviews_count,stock,is_active,is_featured')
     .eq('is_active', true).order('is_featured', { ascending: false })
     .order('sold_count', { ascending: false }).limit(limit);
   return data ?? [];
