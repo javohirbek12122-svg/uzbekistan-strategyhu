@@ -5,6 +5,8 @@ import { ProductGrid } from '@/components/shop/product-card';
 import { CategoryIcon } from '@/components/shop/category-icon';
 import { getBanners, getCategories, getFeaturedProducts, getNewProducts, getZones } from '@/server/queries';
 import { money } from '@/lib/format';
+import { getCoinWallet } from '@/server/coins';
+import { InnovationHub } from '@/components/shop/innovation-hub';
 import { formatEta } from '@/lib/delivery';
 import { SetupNotice } from '@/components/site/setup-notice';
 import { isSupabaseConfigured } from '@/lib/env';
