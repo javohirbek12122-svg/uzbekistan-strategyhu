@@ -20,6 +20,7 @@ export default async function HomePage() {
   let featured: Product[] = [];
   let fresh: Product[] = [];
   let zones: DeliveryZone[] = [];
+  const coinWallet = await getCoinWallet();
 
   try {
     [banners, categories, featured, fresh, zones] = await Promise.all([
