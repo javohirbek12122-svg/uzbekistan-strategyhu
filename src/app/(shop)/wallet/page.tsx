@@ -1,81 +1,46 @@
-'use client';
+import Link from 'next/link';
+import { Coins, Flame, Sparkles, WalletCards } from 'lucide-react';
+import { getSessionUser } from '@/lib/supabase/server';
+import { getCoinLedger, getCoinWallet } from '@/server/coins';
+import { DailyCoinButton } from '@/components/shop/coin-actions';
 
-import { useState, useEffect } from 'react';
-import { Coins, TrendingUp, Wallet as WalletIcon } from 'lucide-react';
-import { useAppStore } from '@/store/app-store';
+export const dynamic = 'force-dynamic';
 
-export default function WalletPage() {
-  const [mounted, setMounted] = useState(false);
-  const wallet = useAppStore((s) => s.wallet);
+export default async function WalletPage() {
+  const user = await getSessionUser();
+  if (!user) {
+    return <div className="mx-auto max-w-lg space-y-4 py-8">
+      <div className="card p-6 text-center">
+        <WalletCards className="mx-auto h-10 w-10 text-brand-600"/>
+        <h1 className="mt-3 text-2xl font-extrabold">Parkent Coin</h1>
+        <p className="mt-2 text-sm text-ink-500">Real balans, streak va xaridga ulangan mukofotlar uchun hisobga kiring.</p>
+        <Link href="/auth/login?next=/wallet" className="btn-primary mt-4 inline-flex">Kirish</Link>
+      </div>
+    </div>;
+  }
+  const [wallet, ledger] = await Promise.all([getCoinWallet(), getCoinLedger(6)]);
+  const today = new Date().toISOString().slice(0, 10);
+  return <div className="space-y-5">
+    <header className="rounded-3xl bg-gradient-to-br from-slate-950 to-slate-800 p-6 text-white">
+      <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold"><Coins className="h-3.5 w-3.5"/> PARKENT COIN</span>
+      <div className="mt-4 flex items-end justify-between gap-4">
+        <div><p className="text-xs text-white/55">Mavjud balans</p><p className="text-4xl font-black">{wallet?.balance?.toLocaleString() ?? 0}</p></div>
+        <Link href="/coin-lab" className="btn bg-white/10 text-white hover:bg-white/15">Coin Lab →</Link>
+      </div>
+      <div className="mt-5 grid grid-cols-3 gap-2 text-xs">
+        <div className="rounded-xl bg-white/5 p-3"><b>{wallet?.streak_days ?? 0}</b><span className="ml-1 text-white/55">streak</span></div>
+        <div className="rounded-xl bg-white/5 p-3"><b>{wallet?.lifetime_earned ?? 0}</b><span className="ml-1 text-white/55">olingan</span></div>
+        <div className="rounded-xl bg-white/5 p-3"><b>{wallet?.lifetime_spent ?? 0}</b><span className="ml-1 text-white/55">sarflangan</span></div>
+      </div>
+    </header>
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+    <section className="grid gap-3 md:grid-cols-2">
+      <div className="card p-5"><div className="flex items-center gap-2"><Flame className="h-5 w-5 text-orange-500"/><h2 className="font-bold">Bugungi Coin Pulse</h2></div><p className="mt-2 text-sm text-ink-500">Streak uzaygani sari kunlik mukofot o‘sadi.</p><div className="mt-4"><DailyCoinButton claimed={wallet?.last_daily_claimed_on === today}/></div></div>
+      <div className="card p-5"><div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-brand-600"/><h2 className="font-bold">Coin bilan nima qilish mumkin?</h2></div><p className="mt-2 text-sm text-ink-500">AI Deep Mode, Price Signal va Delivery Shield shu bir xil balansdan foydalanadi.</p><Link href="/coin-lab" className="mt-4 inline-flex text-sm font-semibold text-brand-700">Barcha mexanizmlar →</Link></div>
+    </section>
 
-  if (!mounted) return null;
-
-  return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-extrabold">Hamyon &amp; Keshbek</h1>
-        <p className="text-sm text-ink-500">Avtomatik 2% keshbek va Parkent Coin yig&apos;ish</p>
-      </header>
-
-      <section className="rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 p-6 text-white shadow-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs opacity-80">Mavjud balans</p>
-            <p className="text-3xl font-extrabold">{wallet.balance.toLocaleString()} so'm</p>
-          </div>
-          <WalletIcon className="h-10 w-10 opacity-50" />
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-white/20 pt-4 text-sm">
-          <div>
-            <p className="opacity-80">Parkent Coin</p>
-            <p className="flex items-center gap-1 text-lg font-bold">
-              <Coins className="h-4 w-4" />
-              {wallet.coins}
-            </p>
-          </div>
-          <div>
-            <p className="opacity-80">Keshbek stavkasi</p>
-            <p className="text-lg font-bold">{(wallet.cashbackRate * 100).toFixed(0)}%</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-3 md:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="flex items-center gap-2 text-sm font-bold">
-            <TrendingUp className="h-4 w-4 text-emerald-500" />
-            So'nggi keshbek
-          </h2>
-          <ul className="mt-3 space-y-2 text-sm">
-            <li className="flex items-center justify-between">
-              <span className="text-ink-500">Buyurtma #10230</span>
-              <span className="font-semibold text-emerald-600">+2 500 so&apos;m</span>
-            </li>
-            <li className="flex items-center justify-between">
-              <span className="text-ink-500">Buyurtma #10228</span>
-              <span className="font-semibold text-emerald-600">+1 800 so&apos;m</span>
-            </li>
-            <li className="flex items-center justify-between">
-              <span className="text-ink-500">Buyurtma #10225</span>
-              <span className="font-semibold text-emerald-600">+3 200 so&apos;m</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-sm font-bold">1-click to&apos;lov</h2>
-          <p className="mt-1 text-xs text-ink-500">Click / Payme / Uzum orqali tezkor to&apos;lov</p>
-          <div className="mt-3 grid gap-2">
-            <button className="btn-secondary w-full">💳 Click orqali</button>
-            <button className="btn-secondary w-full">💳 Payme orqali</button>
-            <button className="btn-secondary w-full">💳 Uzum orqali</button>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-}
+    <section className="card p-5">
+      <h2 className="font-bold">So‘nggi harakatlar</h2>
+      {ledger.length === 0 ? <p className="mt-3 text-sm text-ink-500">Hali Coin harakati yo‘q.</p> : <div className="mt-3 divide-y divide-slate-100">{ledger.map((item: any) => <div key={item.id} className="flex items-center justify-between py-3 text-sm"><span>{item.description || item.event_type}</span><b className={item.delta > 0 ? 'text-emerald-600' : 'text-rose-600'}>{item.delta > 0 ? '+' : ''}{item.delta} Coin</b></div>)}</div>}
+    </section>
+  </div>;
