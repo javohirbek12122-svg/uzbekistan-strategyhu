@@ -10,7 +10,7 @@ import { cn } from '@/lib/format';
 const items = [
   { href: '/', label: 'Asosiy', icon: Home },
   { href: '/catalog', label: 'Katalog', icon: Grid3x3 },
-  { href: '/sommelier', label: 'AI', icon: Sparkles },
+  { href: '/ai-lab', label: 'AI', icon: Sparkles },
   { href: '/tracking', label: 'Reyslar', icon: MapPin },
   { href: '/b2b', label: 'B2B', icon: Briefcase },
   { href: '/wallet', label: 'Hamyon', icon: Wallet },
