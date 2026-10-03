@@ -38,14 +38,14 @@ export function InnovationHub({ wallet }: { wallet: CoinWallet | null }) {
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-600"><Wallet className="h-5 w-5" /></span>
             <ArrowRight className="h-4 w-4 text-slate-400" />
           </div>
-          <p className="mt-4 font-bold">Coin Lab</p><p className="mt-1 text-xs text-ink-500">Pulse, Boost, Signal va ShieldCheck bir panelda.</p>
+          <p className="mt-4 font-bold">Coin Lab</p><p className="mt-1 text-xs text-ink-500">Pulse, Boost, Signal va Shield bir panelda.</p>
         </Link>
         <Link href="/parkent-radar" className="group rounded-2xl border border-slate-200 p-4 transition hover:-translate-y-0.5 hover:shadow-lift">
           <div className="flex items-start justify-between">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-sky-50 text-sky-600"><MapPin className="h-5 w-5" /></span>
             <ArrowRight className="h-4 w-4 text-slate-400" />
           </div>
-          <p className="mt-4 font-bold">Parkent MapPin</p><p className="mt-1 text-xs text-ink-500">Hudud, yetkazish va mahalliy signal qatlamlari.</p>
+          <p className="mt-4 font-bold">Parkent Radar</p><p className="mt-1 text-xs text-ink-500">Hudud, yetkazish va mahalliy signal qatlamlari.</p>
         </Link>
       </div>
 
