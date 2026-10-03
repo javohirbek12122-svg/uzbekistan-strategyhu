@@ -25,10 +25,28 @@ export default function AiLabPage() {
   const [intent, setIntent] = useState('');
   const [result, setResult] = useState('');
   const [voice, setVoice] = useState(false);
+  const [aiText, setAiText] = useState('');
+  const [thinking, setThinking] = useState(false);
   const plan = useMemo(() => buildPlan(result || intent), [result, intent]);
 
-  function runPilot() {
-    setResult(intent.trim() || 'Oilaviy hafta uchun tejamkor savat');
+  async function runPilot() {
+    const prompt = intent.trim() || 'Oilaviy hafta uchun tejamkor savat';
+    setResult(prompt);
+    setThinking(true);
+    setAiText('');
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', parts: [{ text: prompt }] }] }),
+      });
+      const data = await response.json();
+      if (response.ok && data.text) setAiText(data.text);
+    } catch {
+      setAiText('AI ulanishi hozir javob bermadi. Mahalliy Basket DNA reja ishladi.');
+    } finally {
+      setThinking(false);
+    }
   }
 
   function startVoice() {
