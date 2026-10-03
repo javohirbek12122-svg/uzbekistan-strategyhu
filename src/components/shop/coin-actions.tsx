@@ -3,7 +3,7 @@
 
 import { useState, useTransition } from 'react';
 import { Flame, Loader2, MapPin, ShieldCheck, Sparkles } from 'lucide-react';
-import { activateAiBoost, claimDailyCoin, createPriceSignal, armDeliveryShieldCheck } from '@/server/actions/coins';
+import { activateAiBoost, claimDailyCoin, createPriceSignal, armDeliveryShield } from '@/server/actions/coins';
 
 function Result({ message }: { message: string }) {
   return message ? <p className="mt-2 text-xs text-ink-500">{message}</p> : null;
@@ -56,7 +56,7 @@ export function DeliveryShieldCheckButton({ orderId }: { orderId: string }) {
   const [message, setMessage] = useState('');
   return <div>
     <button type="button" disabled={pending} onClick={() => startTransition(async () => {
-      const r = await armDeliveryShieldCheck(orderId); setMessage(r.message); window.dispatchEvent(new CustomEvent('coin-updated'));
+      const r = await armDeliveryShield(orderId); setMessage(r.message); window.dispatchEvent(new CustomEvent('coin-updated'));
     })} className="btn-secondary w-full justify-center">
       {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
       20 Coin → Delivery ShieldCheck
