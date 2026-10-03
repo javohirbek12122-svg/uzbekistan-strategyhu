@@ -13,7 +13,7 @@ const items = [
   { href: '/ai-lab', label: 'AI', icon: Sparkles },
   { href: '/parkent-radar', label: 'Radar', icon: MapPin },
   { href: '/b2b', label: 'B2B', icon: Briefcase },
-  { href: '/wallet', label: 'Hamyon', icon: Wallet },
+  { href: '/coin-lab', label: 'Coin', icon: Wallet },
   { href: '/profile', label: 'Profil', icon: User },
 ];
 
