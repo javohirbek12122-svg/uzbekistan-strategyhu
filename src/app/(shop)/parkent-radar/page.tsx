@@ -21,7 +21,7 @@ export default async function ParkentRadarPage() {
       <div className="relative mt-6 grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl bg-white/10 p-4"><Sparkles className="h-5 w-5 text-emerald-300"/><p className="mt-2 text-xs text-white/60">Tizim</p><p className="font-bold">Jonli</p></div>
         <div className="rounded-2xl bg-white/10 p-4"><MapPin className="h-5 w-5 text-sky-300"/><p className="mt-2 text-xs text-white/60">Hududlar</p><p className="font-bold">{zones.length} ta faol</p></div>
-        <div className="rounded-2xl bg-white/10 p-4"><Sparkles className="h-5 w-5 text-amber-300"/><p className="mt-2 text-xs text-white/60">Yangi qatlam</p><p className="font-bold">MapPin Signal</p></div>
+        <div className="rounded-2xl bg-white/10 p-4"><Sparkles className="h-5 w-5 text-amber-300"/><p className="mt-2 text-xs text-white/60">Yangi qatlam</p><p className="font-bold">Radar Signal</p></div>
       </div>
     </section>
 
@@ -39,12 +39,12 @@ export default async function ParkentRadarPage() {
       <div className="card p-5">
         <div className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-brand-600"/><h2 className="font-bold">MapPin yondashuvi</h2></div>
         <p className="mt-2 text-sm text-ink-500">Hudud kartasi faqat ma'lumot bermaydi: u katalog, AI va yetkazish qarorini birlashtirish uchun xizmat qiladi.</p>
-        <div className="mt-4 space-y-2 text-xs"><div className="rounded-xl bg-slate-50 p-3">1. Hududingizni aniqlang</div><div className="rounded-xl bg-slate-50 p-3">2. AI’dan xarid maqsadini tuzing</div><div className="rounded-xl bg-slate-50 p-3">3. Signal va ShieldCheck bilan riskni boshqaring</div></div>
+        <div className="mt-4 space-y-2 text-xs"><div className="rounded-xl bg-slate-50 p-3">1. Hududingizni aniqlang</div><div className="rounded-xl bg-slate-50 p-3">2. AI’dan xarid maqsadini tuzing</div><div className="rounded-xl bg-slate-50 p-3">3. Signal va Shield bilan riskni boshqaring</div></div>
       </div>
       <div className="card p-5">
         <div className="flex items-center gap-2"><Clock className="h-5 w-5 text-sky-600"/><h2 className="font-bold">Mahsulot oqimi</h2></div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {products.map(product => <Link key={product.id} href={'/product/' + product.name_uz.toLowerCase().replace(/\s+/g, '-')} className="rounded-2xl border border-slate-200 p-4 hover:border-brand-300">
+          {products.map(product => <Link key={product.id} href={'/product/' + product.slug} className="rounded-2xl border border-slate-200 p-4 hover:border-brand-300">
             <p className="text-sm font-semibold">{product.name_uz}</p><p className="mt-1 text-xs text-ink-500">{money(product.price)}</p><span className="mt-2 inline-flex text-xs font-semibold text-brand-600">Signal qo‘yish →</span>
           </Link>)}
         </div>
