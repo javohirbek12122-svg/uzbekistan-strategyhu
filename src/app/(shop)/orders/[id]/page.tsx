@@ -5,6 +5,7 @@ import { getOrder, getOrderHistory } from '@/server/queries';
 import { OrderStatusBadge, PaymentBadge, ShipmentBadge } from '@/components/ui/badges';
 import { OrderTimeline } from '@/components/shop/order-timeline';
 import { PayButton } from '@/components/shop/pay-button';
+import { DeliveryShieldButton } from '@/components/shop/coin-actions';
 import { dateTime, money } from '@/lib/format';
 import { evaluateSla } from '@/lib/orders';
 import type { OrderStatusHistoryRow, Shipment } from '@/lib/types';
@@ -109,6 +110,14 @@ export default async function OrderPage({
               </p>
             )}
           </div>
+
+          {order.status !== 'cancelled' && order.status !== 'returned' && order.payment_status !== 'refunded' && (
+            <div className="card space-y-2 p-4 border-emerald-100 bg-emerald-50/60">
+              <p className="text-sm font-semibold text-emerald-900">Delivery Shield</p>
+              <p className="text-xs leading-5 text-emerald-900/70">20 Coin vaqtincha rezerv qilinadi. Vaqtida yetkazilsa qaytadi; kechiksa +10 Coin bonus qo‘shiladi.</p>
+              <DeliveryShieldButton orderId={order.id} />
+            </div>
+          )}
 
           <Link href={`/support?order=${order.id}`} className="btn-secondary w-full">
             Shu buyurtma bo&apos;yicha murojaat
