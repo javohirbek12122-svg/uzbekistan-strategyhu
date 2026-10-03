@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { BrainCircuit, ChefHat, CircleDollarSign, Mic, Search, Sparkles, Wand2 } from 'lucide-react';
+import { Sparkles, Sparkles, Wallet, Mic, Search, Sparkles, Sparkles } from 'lucide-react';
 
 const presets = [
   { title: 'Oilaviy hafta', copy: '7 kunlik ro‘zg‘or savatini xarajatni nazorat qilib tuzish', icon: '🧺' },
@@ -50,9 +50,9 @@ export default function AiLabPage() {
         <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">AI sizdan buyruq kutmaydi — niyatni tushunadi.</h1>
         <p className="mt-2 text-sm leading-6 text-white/65">Sizning maqsadingizdan xarid rejasi, masalliq ro‘yxati va qidiruv yo‘nalishini bir oqimga yig‘adi.</p>
         <div className="mt-5 flex gap-2">
-          <div className="relative flex-1"><BrainCircuit className="absolute left-3 top-3.5 h-4 w-4 text-white/40"/><input value={intent} onChange={e => setIntent(e.target.value)} onKeyDown={e => e.key === 'Enter' && runPilot()} placeholder="Masalan: 8 kishiga bir haftalik tejamkor savat" className="input border-white/10 bg-white/10 pl-9 text-white placeholder:text-white/35"/></div>
+          <div className="relative flex-1"><Sparkles className="absolute left-3 top-3.5 h-4 w-4 text-white/40"/><input value={intent} onChange={e => setIntent(e.target.value)} onKeyDown={e => e.key === 'Enter' && runPilot()} placeholder="Masalan: 8 kishiga bir haftalik tejamkor savat" className="input border-white/10 bg-white/10 pl-9 text-white placeholder:text-white/35"/></div>
           <button type="button" onClick={startVoice} className="btn-secondary shrink-0 bg-white/10 text-white hover:bg-white/15">{voice ? 'Tinglayapman…' : <><Mic className="h-4 w-4"/> Ovoz</>}</button>
-          <button type="button" onClick={runPilot} className="btn-primary shrink-0"><Wand2 className="h-4 w-4"/> Tuzish</button>
+          <button type="button" onClick={runPilot} className="btn-primary shrink-0"><Sparkles className="h-4 w-4"/> Tuzish</button>
         </div>
       </div>
     </section>
@@ -73,7 +73,7 @@ export default function AiLabPage() {
         <Link href="/catalog" className="btn-primary mt-4 inline-flex">Katalogga o‘tish</Link>
       </div>
       <div className="card p-5">
-        <div className="flex items-center gap-2"><CircleDollarSign className="h-5 w-5 text-amber-500"/><h2 className="font-bold">AI xarajat oynasi</h2></div>
+        <div className="flex items-center gap-2"><Wallet className="h-5 w-5 text-amber-500"/><h2 className="font-bold">AI xarajat oynasi</h2></div>
         <p className="mt-2 text-sm text-ink-500">AI Lab’da budjetni 3 qatlamga ajratish mumkin: majburiy, foydali va keyinroq olinadigan.</p>
         <div className="mt-4 grid gap-2">
           <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3"><b className="text-sm">Majburiy</b><p className="text-xs text-ink-500">Asosiy ro‘zg‘or.</p></div>
@@ -84,7 +84,7 @@ export default function AiLabPage() {
     </section>
 
     <section className="rounded-3xl border border-brand-100 bg-brand-50 p-5">
-      <div className="flex items-start gap-3"><ChefHat className="mt-0.5 h-5 w-5 text-brand-600"/><div><h2 className="font-bold text-brand-900">AI Sommelier ham qolmoqda</h2><p className="mt-1 text-xs leading-5 text-brand-800/70">Osh kalkulyatori va ovozli qidiruvni batafsil variantda ishlatish uchun eski Sommelier bo‘limi ham mavjud.</p><Link href="/sommelier" className="mt-3 inline-flex text-sm font-semibold text-brand-700">Sommelier'ni ochish →</Link></div></div>
+      <div className="flex items-start gap-3"><Sparkles className="mt-0.5 h-5 w-5 text-brand-600"/><div><h2 className="font-bold text-brand-900">AI Sommelier ham qolmoqda</h2><p className="mt-1 text-xs leading-5 text-brand-800/70">Osh kalkulyatori va ovozli qidiruvni batafsil variantda ishlatish uchun eski Sommelier bo‘limi ham mavjud.</p><Link href="/sommelier" className="mt-3 inline-flex text-sm font-semibold text-brand-700">Sommelier'ni ochish →</Link></div></div>
     </section>
   </div>;
 }
